@@ -748,7 +748,7 @@ function checkCollision() {
     var dx = Math.abs(obs.position.x - playerX);
     
     // 放宽碰撞检测到 3.0 单位
-    if(obs.userData.lane === playerLane && dz < 3.0 && dx < 1.2) {
+    if(obs.userData.lane === playerLane && dz < 4.0 && dx < 1.5) {
       return true;
     }
   }

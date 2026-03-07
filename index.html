@@ -276,7 +276,7 @@ function startGame() {
   // 初始障碍物 - 更远
   for(let i = 0; i < 5; i++) {
     spawnObstacles();
-    obstacles.forEach(o => o.position.z -= i * 80);
+    obstacles.forEach(function(o, idx) { o.position.z = -120 - idx * 100 - Math.random() * 30; });
     coinItems.forEach(c => c.position.z -= i * 80);
   }
   
@@ -303,7 +303,7 @@ function checkCollision() {
   
   for(const obs of obstacles) {
     const dz = Math.abs(obs.position.z - playerZ);
-    if(obs.userData.lane === playerLane && dz < 3.5) {
+    if(obs.userData.lane === Math.round(playerLane) && dz < 3.5) {
       return true;
     }
   }

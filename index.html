@@ -321,11 +321,11 @@ function gameOver() {
   document.getElementById('levelProgressDisplay').textContent = maxLevel;
 }
 
-function checkCollision() {
+function checkCollision() { const playerX = player.position.x; const laneWidth = 10 / LANE_COUNT[difficulty];
   const playerZ = 0;
   for(const obs of obstacles) {
     const dz = Math.abs(obs.position.z - playerZ);
-    if(obs.userData.lane === Math.round(playerLane) && dz < 4.5) return true;
+    if(Math.abs(playerX - obs.position.x) < 1.2 && dz < 5.5) return true;
   }
   return false;
 }

@@ -267,7 +267,7 @@ function spawnObstacles() {
   for(let i = 0; i < lanes; i++) {
     if(occupied.includes(i)) {
       const obs = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.6, 1.6), new THREE.MeshStandardMaterial({ color: 0xff2255, emissive: 0xff0044, emissiveIntensity: 0.6, metalness: 0.7, roughness: 0.3 }));
-      obs.position.set(getLaneX(i), 0.9, -150 - Math.random() * 60);
+      obs.position.set(getLaneX(i), 0.9, -80 - Math.random() * 40);
       obs.castShadow = true;
       obs.userData.lane = i;
       scene.add(obs);
@@ -279,7 +279,7 @@ function spawnObstacles() {
     let coinLane;
     do { coinLane = Math.floor(Math.random() * lanes); } while(occupied.includes(coinLane));
     const coin = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.14, 8, 24), new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffaa00, emissiveIntensity: 0.7, metalness: 1, roughness: 0.1 }));
-    coin.position.set(getLaneX(coinLane), 1.2, -150 - Math.random() * 60);
+    coin.position.set(getLaneX(coinLane), 1.2, -80 - Math.random() * 40);
     coin.userData.collected = false;
     scene.add(coin);
     coinItems.push(coin);
@@ -299,11 +299,9 @@ function startGame() {
   
   if(gameMode === 'story') setLevel(0); else setLevel(Math.floor(Math.random() * LEVELS.length));
   
-  for(let i = 0; i < 5; i++) {
+  // 初始障碍物 - 更远更分散
+  for(let i = 0; i < 8; i++) {
     spawnObstacles();
-    const offset = i * 100 + Math.random() * 30;
-    obstacles.forEach(o => { o.position.z -= offset; });
-    coinItems.forEach(c => { c.position.z -= offset; });
   }
   
   document.getElementById('startScreen').classList.add('hidden');
@@ -321,11 +319,14 @@ function gameOver() {
   document.getElementById('levelProgressDisplay').textContent = maxLevel;
 }
 
-function checkCollision() { const playerX = player.position.x; const laneWidth = 10 / LANE_COUNT[difficulty];
+function checkCollision() {
+  const playerX = player.position.x;
   const playerZ = 0;
+  
   for(const obs of obstacles) {
     const dz = Math.abs(obs.position.z - playerZ);
-    if(Math.abs(playerX - obs.position.x) < 1.8 && dz < 7.0) return true;
+    // 使用实际位置判断，给予更大容错空间
+    if(Math.abs(playerX - obs.position.x) < 2.0 && dz < 8.0) return true;
   }
   return false;
 }
@@ -390,12 +391,12 @@ function animate() {
     player.position.y = Math.sin(Date.now() * 0.003) * 0.1;
     
     obstacles.forEach(o => { o.position.z += speed; o.rotation.y += 0.025; });
-    obstacles.forEach(o => { if(o.position.z > 30) { o.position.z = -150 - Math.random() * 50; o.userData.lane = Math.floor(Math.random() * LANE_COUNT[difficulty]); o.position.x = getLaneX(o.userData.lane); } });
+    obstacles.forEach(o => { if(o.position.z > 30) { o.position.z = -80 - Math.random() * 40; o.userData.lane = Math.floor(Math.random() * LANE_COUNT[difficulty]); o.position.x = getLaneX(o.userData.lane); } });
     
     coinItems.forEach(c => { c.position.z += speed; c.rotation.z += 0.12; });
     coinItems = coinItems.filter(c => { if(c.position.z > 30) { scene.remove(c); return false; } return true; });
     
-    if(Math.random() < 0.028) spawnObstacles();
+    if(Math.random() < 0.025) spawnObstacles();
     
     if(checkCollision()) { gameOver(); return; }
     checkCoinCollection();

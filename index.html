@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>滑板人生 - 3D跑酷</title>
+<title>滑板人生 3D - 精致版</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
 
@@ -32,50 +32,118 @@ html, body {
 
 .screen.hidden { opacity: 0; pointer-events: none; }
 
-#startScreen { background: linear-gradient(180deg, #0d0015, #1a0a2e); }
-#gameOverScreen { background: rgba(0,0,0,0.9); }
+#startScreen { 
+  background: linear-gradient(180deg, #0d0015 0%, #1a0a2e 50%, #0d0015 100%);
+  animation: bgPulse 4s ease-in-out infinite;
+}
+
+@keyframes bgPulse {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+#gameOverScreen { background: rgba(0,0,0,0.92); }
 
 /* 标题 */
 .title {
-  font-size: clamp(2.5rem, 10vw, 5rem);
+  font-size: clamp(2.2rem, 9vw, 4.5rem);
   color: #fff;
-  text-shadow: 0 0 30px #0ff, 0 0 60px #0ff, 0 0 90px #f0f;
-  margin-bottom: 10px;
-  animation: glow 2s ease-in-out infinite alternate;
+  text-shadow: 0 0 20px #0ff, 0 0 40px #0ff, 0 0 60px #f0f, 0 0 80px #f0f;
+  margin-bottom: 8px;
+  animation: titleGlow 2s ease-in-out infinite alternate;
 }
 
-@keyframes glow {
-  from { text-shadow: 0 0 30px #0ff, 0 0 60px #0ff; }
-  to { text-shadow: 0 0 40px #f0f, 0 0 80px #f0f, 0 0 120px #0ff; }
+@keyframes titleGlow {
+  from { text-shadow: 0 0 20px #0ff, 0 0 40px #0ff, 0 0 60px #f0f; }
+  to { text-shadow: 0 0 30px #f0f, 0 0 50px #f0f, 0 0 70px #0ff, 0 0 90px #0ff; }
 }
 
 .subtitle {
-  font-size: clamp(0.8rem, 3vw, 1.2rem);
-  color: rgba(255,255,255,0.6);
-  margin-bottom: 30px;
-  letter-spacing: 8px;
+  font-size: clamp(0.7rem, 2.5vw, 1rem);
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 25px;
+  letter-spacing: 6px;
+}
+
+/* 模式选择 */
+.modeSelect {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.modeBtn {
+  padding: 16px 40px;
+  border-radius: 12px;
+  border: 2px solid rgba(0,255,255,0.4);
+  background: linear-gradient(135deg, rgba(0,255,255,0.1) 0%, rgba(255,0,255,0.1) 100%);
+  color: #fff;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.modeBtn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.modeBtn:hover::before { left: 100%; }
+
+.modeBtn:hover { 
+  border-color: #0ff; 
+  box-shadow: 0 0 25px rgba(0,255,255,0.4), inset 0 0 20px rgba(0,255,255,0.1);
+  transform: scale(1.02);
+}
+
+.modeBtn.selected { 
+  border-color: #0ff; 
+  background: linear-gradient(135deg, rgba(0,255,255,0.2) 0%, rgba(255,0,255,0.2) 100%);
+  box-shadow: 0 0 30px rgba(0,255,255,0.5);
+}
+
+.modeBtn.locked { 
+  opacity: 0.5; 
+  border-color: rgba(255,255,255,0.2);
+}
+
+.modeBtn.locked::after {
+  content: ' 🔒';
 }
 
 /* 难度选择 */
-.difficulty { display: flex; gap: 15px; margin-bottom: 30px; }
+.difficulty { display: flex; gap: 10px; margin-bottom: 25px; }
 
 .diffBtn {
-  padding: 12px 24px;
-  border-radius: 25px;
+  padding: 10px 20px;
+  border-radius: 20px;
   border: 2px solid rgba(255,255,255,0.2);
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.08);
   color: #fff;
   font-family: 'Orbitron', sans-serif;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.3s;
 }
 
-.diffBtn:hover { background: rgba(255,255,255,0.2); }
-.diffBtn.selected { border-color: #0ff; background: rgba(0,255,255,0.2); box-shadow: 0 0 20px rgba(0,255,255,0.5); }
-.diffBtn.easy.selected { border-color: #4CAF50; }
-.diffBtn.medium.selected { border-color: #FF9800; }
-.diffBtn.hard.selected { border-color: #f44336; }
+.diffBtn:hover { background: rgba(255,255,255,0.15); }
+
+.diffBtn.selected { 
+  border-color: #0ff; 
+  box-shadow: 0 0 15px rgba(0,255,255,0.4); 
+}
+
+.diffBtn.easy.selected { border-color: #4CAF50; box-shadow: 0 0 15px rgba(76,175,80,0.5); }
+.diffBtn.medium.selected { border-color: #FF9800; box-shadow: 0 0 15px rgba(255,152,0,0.5); }
+.diffBtn.hard.selected { border-color: #f44336; box-shadow: 0 0 15px rgba(244,67,54,0.5); }
 
 /* 按钮 */
 .gameBtn {
@@ -83,14 +151,14 @@ html, body {
   background-size: 200% 200%;
   color: #000;
   border: none;
-  padding: 18px 50px;
-  font-size: clamp(1rem, 4vw, 1.3rem);
+  padding: 16px 45px;
+  font-size: clamp(0.9rem, 3.5vw, 1.2rem);
   font-family: 'Orbitron', sans-serif;
   font-weight: bold;
   border-radius: 50px;
   cursor: pointer;
   animation: gradientShift 3s ease infinite;
-  box-shadow: 0 0 30px rgba(0,255,255,0.5);
+  box-shadow: 0 0 25px rgba(0,255,255,0.4);
   transition: transform 0.2s;
 }
 
@@ -99,48 +167,76 @@ html, body {
   50% { background-position: 100% 50%; }
 }
 
-.gameBtn:hover { transform: scale(1.05); }
+.gameBtn:hover { transform: scale(1.05); box-shadow: 0 0 35px rgba(0,255,255,0.6); }
 
-.hint { position: absolute; bottom: 40px; color: rgba(255,255,255,0.4); font-size: 0.8rem; }
+.stats {
+  margin-top: 20px;
+  color: rgba(255,255,255,0.4);
+  font-size: 0.85rem;
+  display: flex;
+  gap: 20px;
+}
+
+.stats span { color: #0ff; }
 
 /* 游戏UI */
 #gameUI {
   position: absolute;
   top: 0; left: 0; right: 0;
-  padding: 20px;
+  padding: 15px 20px;
   display: flex;
   justify-content: space-between;
   pointer-events: none;
   z-index: 50;
   opacity: 0;
   transition: opacity 0.3s;
+  background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);
 }
 
 #gameUI.show { opacity: 1; }
 
 .uiBox {
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(10px);
-  padding: 12px 24px;
-  border-radius: 30px;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
+  padding: 10px 18px;
+  border-radius: 25px;
   color: #fff;
-  font-size: clamp(0.9rem, 3vw, 1.1rem);
-  border: 1px solid rgba(0,255,255,0.3);
+  font-size: clamp(0.85rem, 2.5vw, 1rem);
+  border: 1px solid rgba(0,255,255,0.25);
 }
 
 .uiBox span { color: #0ff; font-weight: bold; }
 
 .level {
   position: absolute;
-  top: 80px;
+  top: 70px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0,0,0,0.6);
-  padding: 8px 20px;
+  background: rgba(0,0,0,0.5);
+  padding: 8px 16px;
   border-radius: 20px;
   color: #f0f;
-  font-size: 1rem;
+  font-size: 0.9rem;
   border: 1px solid rgba(255,0,255,0.3);
+}
+
+.levelProgress {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.levelProgressBar {
+  height: 100%;
+  background: linear-gradient(90deg, #0ff, #f0f);
+  border-radius: 3px;
+  transition: width 0.3s;
 }
 </style>
 </head>
@@ -152,247 +248,378 @@ html, body {
   <div class="title">🛹 滑板人生</div>
   <div class="subtitle">3D NEON RUNNER</div>
   
+  <div class="modeSelect">
+    <button class="modeBtn selected" id="modeStory" onclick="setMode('story')">🏆 闯关模式</button>
+    <button class="modeBtn locked" id="modeEndless" onclick="setMode('endless')">⚡ 极限模式</button>
+  </div>
+  
   <div class="difficulty">
-    <button class="diffBtn easy selected" onclick="setDifficulty('easy')">简单</button>
-    <button class="diffBtn medium" onclick="setDifficulty('medium')">中等</button>
+    <button class="diffBtn easy" onclick="setDifficulty('easy')">简单</button>
+    <button class="diffBtn medium selected" onclick="setDifficulty('medium')">中等</button>
     <button class="diffBtn hard" onclick="setDifficulty('hard')">困难</button>
   </div>
   
   <button class="gameBtn" onclick="startGame()">开始游戏</button>
-  <div class="hint">← → 左右移动 | 躲避障碍</div>
+  
+  <div class="stats">
+    最高分: <span id="highScoreDisplay">0</span> | 通关: <span id="levelProgressDisplay">0</span>/8
+  </div>
 </div>
 
 <!-- 游戏结束 -->
 <div id="gameOverScreen" class="screen hidden">
-  <div class="title" id="gameOverTitle">😢 游戏结束</div>
-  <div class="subtitle" id="finalScore">得分: 0</div>
+  <div class="title" id="gameOverTitle">😵 游戏结束</div>
+  <div class="subtitle" id="finalStats"></div>
   <button class="gameBtn" onclick="startGame()">再来一次</button>
-  <button class="gameBtn" onclick="showStart()" style="background:linear-gradient(#666,#444)">返回主页</button>
+  <button class="gameBtn" onclick="showStart()" style="background:linear-gradient(135deg,#444,#222);margin-top:10px">返回主页</button>
 </div>
 
 <!-- 游戏UI -->
 <div id="gameUI">
   <div class="uiBox">⭐ <span id="scoreDisplay">0</span></div>
+  <div class="uiBox">💎 <span id="coinDisplay">0</span></div>
   <div class="uiBox">🏃 <span id="distDisplay">0</span>m</div>
 </div>
 
 <div class="level" id="levelDisplay">第 1 关</div>
+<div class="levelProgress"><div class="levelProgressBar" id="progressBar"></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// ==================== 轨道系统配置 ====================
+// ==================== 配置 ====================
 const LANE_CONFIG = {
   easy: { lanes: 3, maxObstacles: 2 },
   medium: { lanes: 4, maxObstacles: 3 },
   hard: { lanes: 5, maxObstacles: 3 }
 };
 
-// 安全模式库 - 每种模式都保留了至少1条空轨道
 const PATTERNS = {
-  easy: [
-    [1,0,0],  // 左侧
-    [0,1,0],  // 中间
-    [0,0,1],  // 右侧
-    [1,1,0],  // 左中
-    [1,0,1],  // 左右
-    [0,1,1],  // 右中
-  ],
-  medium: [
-    [1,0,0,0],
-    [0,1,0,0],
-    [0,0,1,0],
-    [0,0,0,1],
-    [1,1,0,0],
-    [1,0,1,0],
-    [1,0,0,1],
-    [0,1,1,0],
-    [0,1,0,1],
-    [0,0,1,1],
-  ],
-  hard: [
-    [1,0,0,0,0],
-    [0,1,0,0,0],
-    [0,0,1,0,0],
-    [0,0,0,1,0],
-    [0,0,0,0,1],
-    [1,1,0,0,0],
-    [1,0,1,0,0],
-    [1,0,0,1,0],
-    [1,0,0,0,1],
-    [0,1,1,0,0],
-    [0,1,0,1,0],
-    [0,0,1,1,0],
-  ]
+  easy: [[1,0,0],[0,1,0],[0,0,1],[1,1,0],[1,0,1],[0,1,1]],
+  medium: [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1],[1,1,0,0],[1,0,1,0],[1,0,0,1],[0,1,1,0],[0,1,0,1],[0,0,1,1]],
+  hard: [[1,0,0,0,0],[0,1,0,0,0],[0,0,1,0,0],[0,0,0,1,0],[0,0,0,0,1],[1,1,0,0,0],[1,0,1,0,0],[1,0,0,1,0],[1,0,0,0,1],[0,1,1,0,0],[0,1,0,1,0],[0,0,1,1,0]]
 };
 
-// 8关主题
 const LEVELS = [
-  { name: '第 1 关', bg: 0x1a0a15, ground: 0xff69b4, accent: 0xff1493 },
-  { name: '第 2 关', bg: 0x1a1005, ground: 0xff6347, accent: 0xffd700 },
-  { name: '第 3 关', bg: 0x051005, ground: 0x228b22, accent: 0x90ee90 },
-  { name: '第 4 关', bg: 0x0a0a0a, ground: 0xffffff, accent: 0x888888 },
-  { name: '第 5 关', bg: 0x000010, ground: 0x4444ff, accent: 0xff00ff },
-  { name: '第 6 关', bg: 0x051520, ground: 0x88ddff, accent: 0x00ffff },
-  { name: '第 7 关', bg: 0x1a1000, ground: 0xff8800, accent: 0xff4400 },
-  { name: '第 8 关', bg: 0x0a0015, ground: 0x00ffff, accent: 0xff00ff }
+  { name: '第 1 关', bg: 0x1a0a15, ground: 0xff69b4, accent: 0xff1493, particles: 'hearts' },
+  { name: '第 2 关', bg: 0x1a1005, ground: 0xff6347, accent: 0xffd700, particles: 'sparks' },
+  { name: '第 3 关', bg: 0x051005, ground: 0x228b22, accent: 0x90ee90, particles: 'leaves' },
+  { name: '第 4 关', bg: 0x0a0a0a, ground: 0x444444, accent: 0x888888, particles: 'cubes' },
+  { name: '第 5 关', bg: 0x000010, ground: 0x4444ff, accent: 0xff00ff, particles: 'stars' },
+  { name: '第 6 关', bg: 0x051520, ground: 0x88ddff, accent: 0x00ffff, particles: 'snow' },
+  { name: '第 7 关', bg: 0x1a1000, ground: 0xff8800, accent: 0xff4400, particles: 'sand' },
+  { name: '第 8 关', bg: 0x0a0015, ground: 0x00ffff, accent: 0xff00ff, particles: 'data' }
 ];
 
-// 游戏配置
-const CONFIG = {
-  easy: { speed: 0.25, spawnDist: 100 },
-  medium: { speed: 0.4, spawnDist: 80 },
-  hard: { speed: 0.6, spawnDist: 60 }
-};
+const CONFIG = { easy: { speed: 0.25 }, medium: { speed: 0.4 }, hard: { speed: 0.6 } };
 
 // 游戏状态
-var difficulty = 'easy';
+var gameMode = 'story';
+var difficulty = 'medium';
 var currentLevel = 0;
 var gameRunning = false;
-var score = 0;
-var distance = 0;
+var score = 0, coins = 0, distance = 0;
 var levelScore = 0;
-var playerLane = 1;  // 当前所在轨道 (0, 1, 2, ...)
-var targetLane = 1;
-var obstacles = [];
+var playerLane = 1, targetLane = 1;
+var obstacles = [], coinsArr = [];
+var highScore = parseInt(localStorage.getItem('skatelife_highscore') || '0');
+var maxLevel = parseInt(localStorage.getItem('skatelife_level') || '0');
 
-// Three.js 场景
+// Three.js
 var scene, camera, renderer;
-var player, ground, grid, particles;
+var player, ground, grid, particleSystem;
+var clock = new THREE.Clock();
 
 function init() {
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 100);
-  camera.position.set(0, 3.5, 6);
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 200);
+  camera.position.set(0, 4, 7);
   camera.lookAt(0, 1, -5);
 
-  renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
   document.getElementById('game').appendChild(renderer.domElement);
 
   // 灯光
-  scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-  var pointLight = new THREE.PointLight(0xff00ff, 1, 30);
-  pointLight.position.set(0, 5, 0);
-  scene.add(pointLight);
+  var ambient = new THREE.AmbientLight(0xffffff, 0.4);
+  scene.add(ambient);
+  
+  var dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(5, 10, 5);
+  dirLight.castShadow = true;
+  scene.add(dirLight);
 
-  // 地面
+  // 霓虹点光
+  var neonLight1 = new THREE.PointLight(0x00ffff, 1, 30);
+  neonLight1.position.set(-3, 3, 0);
+  scene.add(neonLight1);
+  
+  var neonLight2 = new THREE.PointLight(0xff00ff, 1, 30);
+  neonLight2.position.set(3, 3, 0);
+  scene.add(neonLight2);
+
   ground = new THREE.Mesh(
     new THREE.PlaneGeometry(30, 200),
-    new THREE.MeshStandardMaterial({color:0xff69b4,emissive:0xff1493,emissiveIntensity:0.1})
+    new THREE.MeshStandardMaterial({color: 0xff69b4, metalness: 0.3, roughness: 0.7})
   );
   ground.rotation.x = -Math.PI/2;
   ground.position.z = -80;
+  ground.receiveShadow = true;
   scene.add(ground);
 
   // 轨道线
-  grid = new THREE.GridHelper(200, 80, 0x00ffff, 0x222244);
+  grid = new THREE.GridHelper(200, 60, 0x00ffff, 0x222244);
   grid.position.z = -80;
   scene.add(grid);
 
-  // 粒子
-  var particleCount = 300;
-  var particleGeo = new THREE.BufferGeometry();
-  var positions = new Float32Array(particleCount * 3);
-  for(var i=0; i<particleCount*3; i+=3) {
-    positions[i] = (Math.random()-0.5)*20;
-    positions[i+1] = Math.random()*15;
-    positions[i+2] = -Math.random()*100;
-  }
-  particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  particles = new THREE.Points(particleGeo, new THREE.PointsMaterial({color:0x00ffff, size:0.08, transparent:true, opacity:0.6}));
-  scene.add(particles);
-
-  // 玩家
-  player = new THREE.Group();
-
-  var board = new THREE.Mesh(
-    new THREE.BoxGeometry(1.2, 0.08, 2.2),
-    new THREE.MeshStandardMaterial({color:0x333333})
-  );
-  board.position.y = 0.2;
-  player.add(board);
-
-  var body = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.25, 0.25, 0.5, 16),
-    new THREE.MeshStandardMaterial({color:0x00ffff,emissive:0x00ffff})
-  );
-  body.position.y = 0.9;
-  player.add(body);
-
-  var head = new THREE.Mesh(
-    new THREE.SphereGeometry(0.22, 16, 16),
-    new THREE.MeshStandardMaterial({color:0xffdbac})
-  );
-  head.position.y = 1.55;
-  player.add(head);
-
-  player.position.y = 0.5;
+  // 创建精致玩家
+  player = createPlayer();
+  player.position.y = 0;
   scene.add(player);
 
+  // 粒子
+  createParticleSystem();
+
+  // 更新UI
+  document.getElementById('highScoreDisplay').textContent = highScore;
+  document.getElementById('levelProgressDisplay').textContent = maxLevel;
+  
   setLevel(0);
 }
 
-function setLevel(n) {
-  currentLevel = Math.min(n, LEVELS.length-1);
-  var level = LEVELS[currentLevel];
+function createPlayer() {
+  var p = new THREE.Group();
   
-  scene.background = new THREE.Color(level.bg);
-  ground.material.color.setHex(level.ground);
-  ground.material.emissive.setHex(level.accent);
+  // 滑板
+  var boardGeo = new THREE.BoxGeometry(1.3, 0.08, 2.4);
+  var boardMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.2 });
+  var board = new THREE.Mesh(boardGeo, boardMat);
+  board.position.y = 0.15;
+  board.castShadow = true;
+  p.add(board);
   
-  document.getElementById('levelDisplay').textContent = level.name;
+  // 滑板发光边缘
+  var edgeGeo = new THREE.BoxGeometry(1.35, 0.02, 2.45);
+  var edgeMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+  var edge = new THREE.Mesh(edgeGeo, edgeMat);
+  edge.position.y = 0.19;
+  p.add(edge);
+  
+  // 身体
+  var bodyGeo = new THREE.CylinderGeometry(0.22, 0.28, 0.7, 8);
+  var bodyMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, metalness: 0.5, roughness: 0.5 });
+  var body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.position.y = 0.75;
+  body.castShadow = true;
+  p.add(body);
+  
+  // 头部
+  var headGeo = new THREE.SphereGeometry(0.22, 16, 16);
+  var headMat = new THREE.MeshStandardMaterial({ color: 0xffdbac });
+  var head = new THREE.Mesh(headGeo, headMat);
+  head.position.y = 1.35;
+  head.castShadow = true;
+  p.add(head);
+  
+  // 墨镜
+  var glassesGeo = new THREE.BoxGeometry(0.35, 0.08, 0.1);
+  var glassesMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.1 });
+  var glasses = new THREE.Mesh(glassesGeo, glassesMat);
+  glasses.position.set(0, 1.38, 0.18);
+  p.add(glasses);
+  
+  // 护目镜发光
+  var glowGeo = new THREE.BoxGeometry(0.37, 0.02, 0.02);
+  var glowMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+  var glow = new THREE.Mesh(glowGeo, glowMat);
+  glow.position.set(0, 1.36, 0.24);
+  p.add(glow);
+  
+  // 头发
+  var hairGeo = new THREE.SphereGeometry(0.24, 8, 8, 0, Math.PI * 2, 0, Math.PI/2);
+  var hairMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a });
+  var hair = new THREE.Mesh(hairGeo, hairMat);
+  hair.position.y = 1.48;
+  p.add(hair);
+  
+  // 双手
+  var armGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.4, 6);
+  var armMat = new THREE.MeshStandardMaterial({ color: 0xffdbac });
+  
+  var leftArm = new THREE.Mesh(armGeo, armMat);
+  leftArm.position.set(-0.4, 0.85, 0);
+  leftArm.rotation.z = 0.3;
+  p.add(leftArm);
+  
+  var rightArm = new THREE.Mesh(armGeo, armMat);
+  rightArm.position.set(0.4, 0.85, 0);
+  rightArm.rotation.z = -0.3;
+  p.add(rightArm);
+  
+  // 双腿
+  var legGeo = new THREE.CylinderGeometry(0.08, 0.07, 0.5, 6);
+  var legMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e });
+  
+  var leftLeg = new THREE.Mesh(legGeo, legMat);
+  leftLeg.position.set(-0.2, 0.35, 0);
+  p.add(leftLeg);
+  
+  var rightLeg = new THREE.Mesh(legGeo, legMat);
+  rightLeg.position.set(0.2, 0.35, 0);
+  p.add(rightLeg);
+  
+  return p;
+}
+
+function createParticleSystem() {
+  var count = 500;
+  var geo = new THREE.BufferGeometry();
+  var positions = new Float32Array(count * 3);
+  var colors = new Float32Array(count * 3);
+  
+  for(var i = 0; i < count; i++) {
+    positions[i*3] = (Math.random() - 0.5) * 25;
+    positions[i*3+1] = Math.random() * 15;
+    positions[i*3+2] = -Math.random() * 120;
+    
+    colors[i*3] = 0;
+    colors[i*3+1] = 1;
+    colors[i*3+2] = 1;
+  }
+  
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  
+  var mat = new THREE.PointsMaterial({ 
+    size: 0.12, 
+    vertexColors: true, 
+    transparent: true, 
+    opacity: 0.7,
+    blending: THREE.AdditiveBlending
+  });
+  
+  particleSystem = new THREE.Points(geo, mat);
+  scene.add(particleSystem);
+}
+
+function setMode(mode) {
+  gameMode = mode;
+  document.querySelectorAll('.modeBtn').forEach(function(b) { b.classList.remove('selected'); });
+  document.getElementById('mode' + (mode === 'story' ? 'Story' : 'Endless')).classList.add('selected');
 }
 
 function setDifficulty(level) {
   difficulty = level;
   document.querySelectorAll('.diffBtn').forEach(function(b) { b.classList.remove('selected'); });
-  document.querySelector('.diffBtn.'+level).classList.add('selected');
+  document.querySelector('.diffBtn.' + level).classList.add('selected');
 }
 
-// 获取轨道X坐标
 function getLaneX(lane) {
   var config = LANE_CONFIG[difficulty];
   var laneWidth = 8 / config.lanes;
-  return (lane - (config.lanes-1)/2) * laneWidth;
+  return (lane - (config.lanes - 1) / 2) * laneWidth;
 }
 
-// 生成障碍物 - 使用安全模式
+function setLevel(n) {
+  currentLevel = Math.min(n, LEVELS.length - 1);
+  var level = LEVELS[currentLevel];
+  
+  scene.background = new THREE.Color(level.bg);
+  ground.material.color.setHex(level.ground);
+  ground.material.emissive = new THREE.Color(level.accent);
+  ground.material.emissiveIntensity = 0.1;
+  
+  document.getElementById('levelDisplay').textContent = gameMode === 'endless' ? '⚡ 极限模式' : level.name;
+}
+
 function spawnObstacles() {
   var config = LANE_CONFIG[difficulty];
   var patterns = PATTERNS[difficulty];
   var pattern = patterns[Math.floor(Math.random() * patterns.length)];
   
-  for(var i=0; i<pattern.length; i++) {
+  for(var i = 0; i < pattern.length; i++) {
     if(pattern[i] === 1) {
-      var obs = new THREE.Mesh(
-        new THREE.BoxGeometry(1, 1, 1),
-        new THREE.MeshStandardMaterial({color:0xff3366})
-      );
-      obs.position.set(getLaneX(i), 0.5, -CONFIG[difficulty].spawnDist - i * 30 - Math.random()*20);
-      obs.userData.lane = i;  // 记录所在轨道
+      var obs = createObstacle();
+      obs.position.set(getLaneX(i), 0.6, -80 - Math.random() * 30);
+      obs.userData.lane = i;
       scene.add(obs);
       obstacles.push(obs);
     }
   }
+  
+  // 生成金币
+  if(Math.random() < 0.4) {
+    var coinLane = Math.floor(Math.random() * config.lanes);
+    if(pattern[coinLane] === 0) {
+      var coin = createCoin();
+      coin.position.set(getLaneX(coinLane), 0.8, -80 - Math.random() * 30);
+      scene.add(coin);
+      coinsArr.push(coin);
+    }
+  }
+}
+
+function createObstacle() {
+  var types = ['box', 'cylinder', 'barrier'];
+  var type = types[Math.floor(Math.random() * types.length)];
+  var geo, mat;
+  
+  mat = new THREE.MeshStandardMaterial({ 
+    color: 0xff3366, 
+    emissive: 0xff0044,
+    emissiveIntensity: 0.3,
+    metalness: 0.6,
+    roughness: 0.4
+  });
+  
+  if(type === 'box') {
+    geo = new THREE.BoxGeometry(1, 1, 1);
+  } else if(type === 'cylinder') {
+    geo = new THREE.CylinderGeometry(0.4, 0.4, 1, 16);
+  } else {
+    geo = new THREE.BoxGeometry(1.5, 0.8, 0.3);
+  }
+  
+  var mesh = new THREE.Mesh(geo, mat);
+  mesh.castShadow = true;
+  return mesh;
+}
+
+function createCoin() {
+  var geo = new THREE.CylinderGeometry(0.3, 0.3, 0.08, 16);
+  var mat = new THREE.MeshStandardMaterial({ 
+    color: 0xffd700, 
+    emissive: 0xffaa00,
+    emissiveIntensity: 0.5,
+    metalness: 0.9,
+    roughness: 0.2
+  });
+  var coin = new THREE.Mesh(geo, mat);
+  coin.rotation.x = Math.PI / 2;
+  coin.userData.collected = false;
+  return coin;
 }
 
 function startGame() {
-  score = 0;
-  distance = 0;
-  levelScore = 0;
+  score = 0; coins = 0; distance = 0; levelScore = 0;
   playerLane = Math.floor(LANE_CONFIG[difficulty].lanes / 2);
   targetLane = playerLane;
   
-  // 清理旧障碍物
   obstacles.forEach(function(o) { scene.remove(o); });
   obstacles = [];
+  coinsArr.forEach(function(c) { scene.remove(c); });
+  coinsArr = [];
   
-  setLevel(0);
+  if(gameMode === 'story') {
+    setLevel(0);
+  } else {
+    setLevel(Math.floor(Math.random() * LEVELS.length));
+  }
   
-  // 初始障碍物
-  for(var i=0; i<3; i++) {
+  for(var i = 0; i < 3; i++) {
     spawnObstacles();
+    obstacles.forEach(function(o) { o.position.z -= i * 40; });
   }
   
   document.getElementById('startScreen').classList.add('hidden');
@@ -411,63 +638,68 @@ function gameOver() {
   gameRunning = false;
   document.getElementById('gameUI').classList.remove('show');
   document.getElementById('gameOverScreen').classList.remove('hidden');
-  document.getElementById('finalScore').textContent = '得分: ' + score + ' | 距离: ' + Math.floor(distance) + 'm';
+  
+  if(score > highScore) {
+    highScore = score;
+    localStorage.setItem('skatelife_highscore', highScore);
+  }
+  
+  if(gameMode === 'story' && currentLevel > maxLevel) {
+    maxLevel = currentLevel;
+    localStorage.setItem('skatelife_level', maxLevel);
+    if(maxLevel >= 7) {
+      document.getElementById('modeEndless').classList.remove('locked');
+    }
+  }
+  
+  document.getElementById('finalStats').innerHTML = 
+    '得分: ' + score + ' | 💎 ' + coins + ' | 🏃 ' + Math.floor(distance) + 'm<br>' +
+    '最高分: ' + highScore;
 }
 
-// 碰撞检测 - 基于轨道
 function checkCollision() {
   var playerX = getLaneX(playerLane);
   var playerZ = 0;
   
-  for(var k=0; k<obstacles.length; k++) {
+  for(var k = 0; k < obstacles.length; k++) {
     var obs = obstacles[k];
     var dz = Math.abs(obs.position.z - playerZ);
+    var dx = Math.abs(obs.position.x - playerX);
     
-    // 如果在同一轨道且距离近
-    if(obs.userData.lane === playerLane && dz < 3.5) {
+    if(obs.userData.lane === playerLane && dz < 1.5 && dx < 0.8) {
       return true;
     }
   }
   return false;
 }
 
-// 输入控制 - 轨道切换
+function checkCoinCollection() {
+  var playerX = getLaneX(playerLane);
+  var playerZ = 0;
+  
+  for(var i = coinsArr.length - 1; i >= 0; i--) {
+    var coin = coinsArr[i];
+    if(coin.userData.collected) continue;
+    
+    var dz = Math.abs(coin.position.z - playerZ);
+    var dx = Math.abs(coin.position.x - playerX);
+    
+    if(dz < 1.2 && dx < 0.8) {
+      coin.userData.collected = true;
+      scene.remove(coin);
+      coinsArr.splice(i, 1);
+      coins += 1;
+      score += 10;
+    }
+  }
+}
+
+// 输入
 document.addEventListener('keydown', function(e) {
   if(!gameRunning) return;
-  
   var maxLane = LANE_CONFIG[difficulty].lanes - 1;
-  
-  if(e.key === 'ArrowLeft' || e.key === 'a') {
-    targetLane = Math.max(0, targetLane - 1);
-  } else if(e.key === 'ArrowRight' || e.key === 'd') {
-    targetLane = Math.min(maxLane, targetLane + 1);
-  }
-});
-
-document.addEventListener('touchstart', function(e) {
-  if(!gameRunning) return;
-  var startX = e.touches[0].clientX;
-  
-  var handleMove = function(moveEvent) {
-    var diff = moveEvent.touches[0].clientX - startX;
-    if(Math.abs(diff) > 30) {
-      var maxLane = LANE_CONFIG[difficulty].lanes - 1;
-      if(diff > 0) {
-        targetLane = Math.min(maxLane, targetLane + 1);
-      } else {
-        targetLane = Math.max(0, targetLane - 1);
-      }
-      startX = moveEvent.touches[0].clientX;
-    }
-  };
-  
-  var handleEnd = function() {
-    document.removeEventListener('touchmove', handleMove);
-    document.removeEventListener('touchend', handleEnd);
-  };
-  
-  document.addEventListener('touchmove', handleMove);
-  document.addEventListener('touchend', handleEnd);
+  if(e.key === 'ArrowLeft' || e.key === 'a') targetLane = Math.max(0, targetLane - 1);
+  if(e.key === 'ArrowRight' || e.key === 'd') targetLane = Math.min(maxLane, targetLane + 1);
 });
 
 document.addEventListener('mousemove', function(e) {
@@ -478,73 +710,122 @@ document.addEventListener('mousemove', function(e) {
   targetLane = Math.max(0, Math.min(maxLane, targetLane));
 });
 
-// 游戏循环
+document.addEventListener('touchstart', function(e) {
+  if(!gameRunning) return;
+  var startX = e.touches[0].clientX;
+  var handleMove = function(ev) {
+    var diff = ev.touches[0].clientX - startX;
+    if(Math.abs(diff) > 30) {
+      var maxLane = LANE_CONFIG[difficulty].lanes - 1;
+      if(diff > 0) targetLane = Math.min(maxLane, targetLane + 1);
+      else targetLane = Math.max(0, targetLane - 1);
+      startX = ev.touches[0].clientX;
+    }
+  };
+  var handleEnd = function() {
+    document.removeEventListener('touchmove', handleMove);
+    document.removeEventListener('touchend', handleEnd);
+  };
+  document.addEventListener('touchmove', handleMove);
+  document.addEventListener('touchend', handleEnd);
+});
+
 function gameLoop() {
+  requestAnimationFrame(gameLoop);
+  
+  var delta = clock.getDelta();
+  
   if(gameRunning) {
     var config = CONFIG[difficulty];
-    var laneConfig = LANE_CONFIG[difficulty];
+    var speed = config.speed;
     
-    // 轨道移动
-    playerLane += (targetLane - playerLane) * 0.15;
+    // 极限模式速度递增
+    if(gameMode === 'endless') {
+      speed += score * 0.0001;
+    }
+    
+    // 玩家移动
+    playerLane += (targetLane - playerLane) * 0.12;
     player.position.x = getLaneX(Math.round(playerLane));
-    player.rotation.z = (targetLane - playerLane) * 0.3;
-    player.position.y = 0.5 + Math.sin(Date.now()*0.008)*0.08;
+    player.rotation.z = (targetLane - playerLane) * 0.25;
+    player.rotation.y = (targetLane - playerLane) * 0.1;
+    player.position.y = Math.sin(Date.now() * 0.006) * 0.05;
     
     // 障碍物移动
     obstacles.forEach(function(o) {
-      o.position.z += config.speed;
+      o.position.z += speed;
+      o.rotation.y += 0.01;
     });
     
-    // 重置障碍物
+    // 障碍物回收
     obstacles.forEach(function(o) {
-      if(o.position.z > 10) {
-        o.position.z = -config.spawnDist - Math.random()*20;
-        o.userData.lane = Math.floor(Math.random() * laneConfig.lanes);
+      if(o.position.z > 15) {
+        o.position.z = -80 - Math.random() * 20;
+        o.userData.lane = Math.floor(Math.random() * LANE_CONFIG[difficulty].lanes);
         o.position.x = getLaneX(o.userData.lane);
       }
     });
     
-    // 生成新障碍物
-    if(Math.random() < 0.02) {
-      spawnObstacles();
+    // 金币移动和旋转
+    coinsArr.forEach(function(c) {
+      c.position.z += speed;
+      c.rotation.z += 0.05;
+    });
+    
+    // 金币回收
+    for(var i = coinsArr.length - 1; i >= 0; i--) {
+      if(coinsArr[i].position.z > 15) {
+        scene.remove(coinsArr[i]);
+        coinsArr.splice(i, 1);
+      }
     }
     
-    // 碰撞检测
-    if(checkCollision()) {
-      gameOver();
-    }
+    // 生成
+    if(Math.random() < 0.015) spawnObstacles();
+    
+    // 检测
+    if(checkCollision()) gameOver();
+    checkCoinCollection();
     
     // 分数
-    distance += config.speed;
-    score = Math.floor(distance);
-    levelScore = Math.floor(distance);
+    distance += speed;
+    score += Math.floor(speed * 2);
+    levelScore += Math.floor(speed * 2);
     
-    // 通关
-    if(levelScore > 500 && currentLevel < LEVELS.length-1) {
-      currentLevel++;
-      setLevel(currentLevel);
+    // 关卡/模式切换
+    if(gameMode === 'story' && levelScore > 500) {
       levelScore = 0;
+      if(currentLevel < LEVELS.length - 1) {
+        currentLevel++;
+        setLevel(currentLevel);
+      }
+    } else if(gameMode === 'endless' && levelScore > 200) {
+      levelScore = 0;
+      setLevel(Math.floor(Math.random() * LEVELS.length));
     }
     
+    // UI更新
     document.getElementById('scoreDisplay').textContent = score;
+    document.getElementById('coinDisplay').textContent = coins;
     document.getElementById('distDisplay').textContent = Math.floor(distance);
     
+    var progress = gameMode === 'endless' ? (levelScore / 200) * 100 : (levelScore / 500) * 100;
+    document.getElementById('progressBar').style.width = Math.min(progress, 100) + '%';
+    
     // 粒子
-    var positions = particles.geometry.attributes.position.array;
-    for(var i=0; i<positions.length; i+=3) {
-      positions[i+2] += config.speed * 0.3;
-      if(positions[i+2] > 10) positions[i+2] = -100;
+    var positions = particleSystem.geometry.attributes.position.array;
+    for(var i = 0; i < positions.length; i += 3) {
+      positions[i + 2] += speed * 0.5;
+      if(positions[i + 2] > 10) positions[i + 2] = -120;
     }
-    particles.geometry.attributes.position.needsUpdate = true;
+    particleSystem.geometry.attributes.position.needsUpdate =    true;
   }
   
   renderer.render(scene, camera);
-  requestAnimationFrame(gameLoop);
 }
 
-// 初始化
-window.addEventListener('resize', function() {
-  camera.aspect = window.innerWidth/window.innerHeight;
+window.addEventListener(resize, function() {
+  camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
@@ -552,7 +833,7 @@ window.addEventListener('resize', function() {
 init();
 gameLoop();
 
-console.log('滑板人生 3D - 轨道系统版 初始化完成');
+console.log(滑板人生 3D 精致版 初始化完成);
 </script>
 </body>
 </html>

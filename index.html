@@ -325,7 +325,7 @@ function checkCollision() { const playerX = player.position.x; const laneWidth =
   const playerZ = 0;
   for(const obs of obstacles) {
     const dz = Math.abs(obs.position.z - playerZ);
-    if(Math.abs(playerX - obs.position.x) < 1.2 && dz < 5.5) return true;
+    if(Math.abs(playerX - obs.position.x) < 1.8 && dz < 7.0) return true;
   }
   return false;
 }

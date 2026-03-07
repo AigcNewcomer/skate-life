@@ -224,7 +224,7 @@ function startGame() {
   obstacles.forEach(o => scene.remove(o)); obstacles = [];
   coinsArr.forEach(c => scene.remove(c)); coinsArr = [];
   if(gameMode === 'story') setLevel(0); else setLevel(Math.floor(Math.random() * LEVELS.length));
-  for(var i = 0; i < 4; i++) { spawnObstacles(); obstacles.forEach(o => o.position.z -= i * 50); }
+  for(var i = 0; i < 4; i++) { spawnObstacles(); obstacles.forEach(o => o.position.z -= i * 70); }
   document.getElementById('startScreen').classList.add('hidden');
   document.getElementById('gameOverScreen').classList.add('hidden');
   document.getElementById('gameUI').classList.add('show');
@@ -245,7 +245,7 @@ function checkCollision() {
   for(var k = 0; k < obstacles.length; k++) {
     var o = obstacles[k];
     var dz = Math.abs(o.position.z - pz);
-    if(o.userData.lane === Math.round(playerLane) && dz < 2.5) return true;
+    if(o.userData.lane === Math.round(playerLane) && dz < 4.0) return true;
   }
   return false;
 }

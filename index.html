@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>滑板人生 3D - 增强版</title>
+<title>滑板人生 3D</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -72,21 +72,19 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// ========== 配置 ==========
 const LANE_COUNT = { easy: 3, medium: 4, hard: 5 };
 const LEVELS = [
-  { name: '第 1 关', bg: 0x1a0a15, ground: 0xff69b4, accent: 0xff1493, fog: 0x1a0a15, sky: 0xffb6c1 },
-  { name: '第 2 关', bg: 0x1a1005, ground: 0xff6347, accent: 0xffd700, fog: 0x1a1005, sky: 0xffa500 },
-  { name: '第 3 关', bg: 0x051005, ground: 0x228b22, accent: 0x90ee90, fog: 0x051005, sky: 0x98fb98 },
-  { name: '第 4 关', bg: 0x0a0a0a, ground: 0x444444, accent: 0xaaaaaa, fog: 0x0a0a0a, sky: 0x333333 },
-  { name: '第 5 关', bg: 0x000020, ground: 0x4444ff, accent: 0xff00ff, fog: 0x000020, sky: 0x191970 },
-  { name: '第 6 关', bg: 0x051520, ground: 0x88ddff, accent: 0x00ffff, fog: 0x051520, sky: 0xb0e0e6 },
-  { name: '第 7 关', bg: 0x1a1000, ground: 0xff6600, accent: 0xff3300, fog: 0x1a1000, sky: 0xcd853f },
-  { name: '第 8 关', bg: 0x0a0020, ground: 0x00ffff, accent: 0xff00ff, fog: 0x0a0020, sky: 0x4b0082 }
+  { name: '第 1 关', bg: 0x1a0a15, ground: 0xff69b4, accent: 0xff1493, fog: 0x1a0a15 },
+  { name: '第 2 关', bg: 0x1a1005, ground: 0xff6347, accent: 0xffd700, fog: 0x1a1005 },
+  { name: '第 3 关', bg: 0x051005, ground: 0x228b22, accent: 0x90ee90, fog: 0x051005 },
+  { name: '第 4 关', bg: 0x0a0a0a, ground: 0x444444, accent: 0xaaaaaa, fog: 0x0a0a0a },
+  { name: '第 5 关', bg: 0x000020, ground: 0x4444ff, accent: 0xff00ff, fog: 0x000020 },
+  { name: '第 6 关', bg: 0x051520, ground: 0x88ddff, accent: 0x00ffff, fog: 0x051520 },
+  { name: '第 7 关', bg: 0x1a1000, ground: 0xff6600, accent: 0xff3300, fog: 0x1a1000 },
+  { name: '第 8 关', bg: 0x0a0020, ground: 0x00ffff, accent: 0xff00ff, fog: 0x0a0020 }
 ];
 const GAME_SPEED = { easy: 0.15, medium: 0.28, hard: 0.45 };
 
-// ========== 音效 ==========
 let soundOn = true, audioCtx = null;
 function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
 function tone(freq, dur, type = 'sine', vol = 0.1) {
@@ -98,7 +96,6 @@ function playUpSound() { tone(523, 0.08); setTimeout(() => tone(659, 0.08), 60);
 function playClickSound() { tone(440, 0.02, 'sine', 0.03); }
 function toggleSound() { soundOn = !soundOn; document.querySelector('.soundBtn').textContent = soundOn ? '🔊' : '🔇'; if(soundOn) initAudio(); }
 
-// ========== 状态 ==========
 let gameMode = 'story', difficulty = 'medium', currentLevel = 0, gameRunning = false;
 let score = 0, coins = 0, distance = 0, levelScore = 0, lastLevelScore = 0;
 let playerLane = 1, targetLane = 1;
@@ -106,7 +103,6 @@ let obstacles = [], coinItems = [], decorations = [];
 let highScore = parseInt(localStorage.getItem('sl_hs') || '0');
 let maxLevel = parseInt(localStorage.getItem('sl_lv') || '0');
 
-// ========== Three.js ==========
 const canvas = document.getElementById('game');
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0x1a0a15, 30, 150);
@@ -123,69 +119,53 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.2;
 
-// 灯光 - 更丰富的光照
 scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 const sun = new THREE.DirectionalLight(0xffffff, 1.5); sun.position.set(15, 30, 20); sun.castShadow = true; sun.shadow.mapSize.width = 2048; sun.shadow.mapSize.height = 2048; sun.shadow.camera.near = 1; sun.shadow.camera.far = 80; sun.shadow.camera.left = -30; sun.shadow.camera.right = 30; sun.shadow.camera.top = 30; sun.shadow.camera.bottom = -30; scene.add(sun);
 
-// 霓虹灯 - 更强的效果
 const neonL1 = new THREE.PointLight(0x00ffff, 3, 80); neonL1.position.set(-15, 15, -10); scene.add(neonL1);
 const neonL2 = new THREE.PointLight(0xff00ff, 3, 80); neonL2.position.set(15, 15, -10); scene.add(neonL2);
-const neonL3 = new THREE.PointLight(0xff00ff, 2, 60); neonL3.position.set(0, 20, -50); scene.add(neonL3);
 
-// 地面 - 带纹理感
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(80, 400), new THREE.MeshStandardMaterial({ color: 0xff69b4, metalness: 0.6, roughness: 0.4 }));
 ground.rotation.x = -Math.PI/2; ground.position.z = -150; ground.receiveShadow = true; scene.add(ground);
 
-// 赛道 - 更宽更有感觉
 const track = new THREE.Mesh(new THREE.PlaneGeometry(12, 400), new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.2 }));
 track.rotation.x = -Math.PI/2; track.position.y = 0.01; track.position.z = -150; track.receiveShadow = true; scene.add(track);
 
-// 赛道边缘发光
 const edgeGeo = new THREE.BoxGeometry(0.15, 0.3, 400);
 const edgeMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
 const leftEdge = new THREE.Mesh(edgeGeo, edgeMat); leftEdge.position.set(-6, 0.15, -150); scene.add(leftEdge);
 const rightEdge = new THREE.Mesh(edgeGeo, edgeMat); rightEdge.position.set(6, 0.15, -150); scene.add(rightEdge);
 
-// 网格 - 更密集
 const grid = new THREE.GridHelper(400, 160, 0x00ffff, 0x111144); grid.position.z = -150; grid.position.y = 0.02; scene.add(grid);
 
-// ========== 玩家 - 更精致 ==========
 const player = new THREE.Group();
 
-// 滑板 - 带轮子细节
 const board = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.15, 3), new THREE.MeshStandardMaterial({ color: 0x0a0a0a, metalness: 0.95, roughness: 0.05 }));
 board.position.y = 0.3; board.castShadow = true; player.add(board);
-// 滑板发光边缘
 const boardGlow = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.02, 3.1), new THREE.MeshBasicMaterial({ color: 0x00ffff })); boardGlow.position.y = 0.38; player.add(boardGlow);
-// 轮子
+
 const wheelGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.12, 20);
 const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.1 });
 [[-0.6, 0.18, 1.1], [0.6, 0.18, 1.1], [-0.6, 0.18, -1.1], [0.6, 0.18, -1.1]].forEach(p => { const w = new THREE.Mesh(wheelGeo, wheelMat); w.rotation.z = Math.PI/2; w.position.set(...p); player.add(w); });
 
-// 身体 - 穿滑板服
 const body = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.36, 1, 16), new THREE.MeshStandardMaterial({ color: 0x1a1a2e, metalness: 0.5, roughness: 0.5 }));
 body.position.y = 1.1; body.castShadow = true; player.add(body);
 
-// 头
 const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 24, 24), new THREE.MeshStandardMaterial({ color: 0xffdbac }));
 head.position.y = 1.95; head.castShadow = true; player.add(head);
 
-// 头发 - 时尚发型
 const hair = new THREE.Mesh(new THREE.SphereGeometry(0.35, 12, 12, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshStandardMaterial({ color: 0x1a0a0a }));
 hair.position.y = 2.1; player.add(hair);
 
-// 墨镜 - 潮流
 const glasses = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.14, 0.16), new THREE.MeshStandardMaterial({ color: 0x000000, metalness: 1, roughness: 0 }));
 glasses.position.set(0, 1.98, 0.3); player.add(glasses);
 const glint = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.02, 0.02), new THREE.MeshBasicMaterial({ color: 0x00ffff })); glint.position.set(0, 1.96, 0.38); player.add(glint);
 
-// 手臂 - 弯曲姿态
 const armGeo = new THREE.CylinderGeometry(0.09, 0.09, 0.55, 8);
 const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdbac });
 const leftArm = new THREE.Mesh(armGeo, skinMat); leftArm.position.set(-0.55, 1.2, 0); leftArm.rotation.z = 0.5; player.add(leftArm);
 const rightArm = new THREE.Mesh(armGeo, skinMat); rightArm.position.set(0.55, 1.2, 0); rightArm.rotation.z = -0.5; player.add(rightArm);
 
-// 腿
 const legGeo = new THREE.CylinderGeometry(0.11, 0.1, 0.65, 8);
 const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e });
 const leftLeg = new THREE.Mesh(legGeo, pantsMat); leftLeg.position.set(-0.28, 0.55, 0); player.add(leftLeg);
@@ -193,66 +173,51 @@ const rightLeg = new THREE.Mesh(legGeo, pantsMat); rightLeg.position.set(0.28, 0
 
 player.position.y = 0; scene.add(player);
 
-// ========== 装饰物 - 路边树木和路灯 ==========
 function createDecorations() {
-  // 清除旧装饰
-  decorations.forEach(d => scene.remove(d));
+  decorations.forEach(d => { if(d) scene.remove(d); });
   decorations = [];
   
-  const laneWidth = 12;
-  const sides = [-laneWidth/2 - 2, laneWidth/2 + 2];
-  
+  const sides = [-10, 10];
   sides.forEach(side => {
-    for(let i = 0; i < 20; i++) {
-      // 树木
+    for(let i = 0; i < 15; i++) {
       const tree = new THREE.Group();
       const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 2, 8), new THREE.MeshStandardMaterial({ color: 0x4a3728 }));
       trunk.position.y = 1; trunk.castShadow = true; tree.add(trunk);
       const leaves = new THREE.Mesh(new THREE.ConeGeometry(1.2, 3, 8), new THREE.MeshStandardMaterial({ color: 0x228b22 }));
       leaves.position.y = 3.5; leaves.castShadow = true; tree.add(leaves);
-      tree.position.set(side + (Math.random() - 0.5) * 2, 0, -i * 20 - Math.random() * 10);
+      tree.position.set(side + (Math.random() - 0.5) * 3, 0, -i * 25 - Math.random() * 10);
       scene.add(tree);
       decorations.push(tree);
       
-      // 路灯 (每隔几棵树)
-      if(i % 3 === 0) {
+      if(i % 4 === 0) {
         const lamp = new THREE.Group();
         const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 5, 8), new THREE.MeshStandardMaterial({ color: 0x333333 }));
         pole.position.y = 2.5; lamp.add(pole);
         const light = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffffaa }));
         light.position.y = 5.2; lamp.add(light);
         const lampLight = new THREE.PointLight(0xffffaa, 1, 15); lampLight.position.y = 5.2; lamp.add(lampLight);
-        lamp.position.set(side > 0 ? side + 1 : side - 1, 0, -i * 20 - 5);
+        lamp.position.set(side > 0 ? side + 2 : side - 2, 0, -i * 25 - 8);
         scene.add(lamp);
         decorations.push(lamp);
       }
     }
   });
   
-  // 远景山脉
-  for(let i = 0; i < 8; i++) {
-    const mountain = new THREE.Mesh(
-      new THREE.ConeGeometry(15 + Math.random() * 10, 25 + Math.random() * 15, 6),
-      new THREE.MeshStandardMaterial({ color: 0x2a2a3a, flatShading: true })
-    );
+  for(let i = 0; i < 6; i++) {
+    const mountain = new THREE.Mesh(new THREE.ConeGeometry(15 + Math.random() * 10, 25 + Math.random() * 15, 6), new THREE.MeshStandardMaterial({ color: 0x2a2a3a, flatShading: true }));
     mountain.position.set((Math.random() - 0.5) * 150, 10, -180 - i * 30);
     scene.add(mountain);
     decorations.push(mountain);
   }
   
-  // 云层
-  for(let i = 0; i < 12; i++) {
-    const cloud = new THREE.Mesh(
-      new THREE.SphereGeometry(3 + Math.random() * 4, 8, 8),
-      new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 })
-    );
+  for(let i = 0; i < 10; i++) {
+    const cloud = new THREE.Mesh(new THREE.SphereGeometry(3 + Math.random() * 4, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 }));
     cloud.position.set((Math.random() - 0.5) * 100, 25 + Math.random() * 10, -50 - i * 25);
     scene.add(cloud);
     decorations.push(cloud);
   }
 }
 
-// ========== 粒子 ==========
 const particleCount = 1500;
 const particleGeo = new THREE.BufferGeometry();
 const pPos = new Float32Array(particleCount * 3);
@@ -269,7 +234,6 @@ const particleMat = new THREE.PointsMaterial({ size: 0.25, vertexColors: true, t
 const particleSystem = new THREE.Points(particleGeo, particleMat);
 scene.add(particleSystem);
 
-// ========== 函数 ==========
 function setMode(m) { gameMode = m; playClickSound(); document.querySelectorAll('.modeBtn').forEach(b => b.classList.remove('selected')); document.getElementById('mode' + (m === 'story' ? 'Story' : 'Endless')).classList.add('selected'); }
 function setDifficulty(d) { difficulty = d; playClickSound(); document.querySelectorAll('.diffBtn').forEach(b => b.classList.remove('selected')); document.querySelector('.diffBtn.' + d).classList.add('selected'); }
 
@@ -302,10 +266,7 @@ function spawnObstacles() {
   
   for(let i = 0; i < lanes; i++) {
     if(occupied.includes(i)) {
-      const obs = new THREE.Mesh(
-        new THREE.BoxGeometry(1.6, 1.6, 1.6),
-        new THREE.MeshStandardMaterial({ color: 0xff2255, emissive: 0xff0044, emissiveIntensity: 0.6, metalness: 0.7, roughness: 0.3 })
-      );
+      const obs = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.6, 1.6), new THREE.MeshStandardMaterial({ color: 0xff2255, emissive: 0xff0044, emissiveIntensity: 0.6, metalness: 0.7, roughness: 0.3 }));
       obs.position.set(getLaneX(i), 0.9, -150 - Math.random() * 60);
       obs.castShadow = true;
       obs.userData.lane = i;
@@ -314,14 +275,10 @@ function spawnObstacles() {
     }
   }
   
-  // 金币
   if(Math.random() < 0.65) {
     let coinLane;
     do { coinLane = Math.floor(Math.random() * lanes); } while(occupied.includes(coinLane));
-    const coin = new THREE.Mesh(
-      new THREE.TorusGeometry(0.45, 0.14, 8, 24),
-      new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffaa00, emissiveIntensity: 0.7, metalness: 1, roughness: 0.1 })
-    );
+    const coin = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.14, 8, 24), new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffaa00, emissiveIntensity: 0.7, metalness: 1, roughness: 0.1 }));
     coin.position.set(getLaneX(coinLane), 1.2, -150 - Math.random() * 60);
     coin.userData.collected = false;
     scene.add(coin);
@@ -342,11 +299,11 @@ function startGame() {
   
   if(gameMode === 'story') setLevel(0); else setLevel(Math.floor(Math.random() * LEVELS.length));
   
-  // 初始障碍物 - 更远
-  for(let i = 0; i < 6; i++) {
+  for(let i = 0; i < 5; i++) {
     spawnObstacles();
-    obstacles.forEach(function(o, idx) { o.position.z -= idx * 120; });
-    coinItems.forEach(function(c, idx) { c.position.z -= idx * 120; });
+    const offset = i * 100 + Math.random() * 30;
+    obstacles.forEach(o => { o.position.z -= offset; });
+    coinItems.forEach(c => { c.position.z -= offset; });
   }
   
   document.getElementById('startScreen').classList.add('hidden');
@@ -364,7 +321,6 @@ function gameOver() {
   document.getElementById('levelProgressDisplay').textContent = maxLevel;
 }
 
-// 碰撞检测
 function checkCollision() {
   const playerZ = 0;
   for(const obs of obstacles) {
@@ -391,7 +347,6 @@ function checkCoinCollection() {
   }
 }
 
-// 输入
 document.addEventListener('keydown', e => {
   if(!gameRunning) return;
   const max = LANE_COUNT[difficulty] - 1;
@@ -423,40 +378,32 @@ document.addEventListener('touchstart', e => {
   document.addEventListener('touchend', end);
 });
 
-// 循环
 function animate() {
   requestAnimationFrame(animate);
   
   if(gameRunning) {
     const speed = GAME_SPEED[difficulty] + (gameMode === 'endless' ? score * 0.00005 : 0);
     
-    // 玩家
     playerLane += (targetLane - playerLane) * 0.12;
     player.position.x = getLaneX(Math.round(playerLane));
     player.rotation.z = (targetLane - playerLane) * 0.45;
     player.position.y = Math.sin(Date.now() * 0.003) * 0.1;
     
-    // 障碍物
     obstacles.forEach(o => { o.position.z += speed; o.rotation.y += 0.025; });
     obstacles.forEach(o => { if(o.position.z > 30) { o.position.z = -150 - Math.random() * 50; o.userData.lane = Math.floor(Math.random() * LANE_COUNT[difficulty]); o.position.x = getLaneX(o.userData.lane); } });
     
-    // 金币
     coinItems.forEach(c => { c.position.z += speed; c.rotation.z += 0.12; });
     coinItems = coinItems.filter(c => { if(c.position.z > 30) { scene.remove(c); return false; } return true; });
     
-    // 生成
     if(Math.random() < 0.028) spawnObstacles();
     
-    // 检测
     if(checkCollision()) { gameOver(); return; }
     checkCoinCollection();
     
-    // 分数
     distance += speed;
     score += Math.floor(speed * 2);
     levelScore += Math.floor(speed * 2);
     
-    // 升级    // 升级
     if(gameMode === 'story' && levelScore > 500 && lastLevelScore <= 500) {
       playUpSound();
       if(currentLevel < LEVELS.length - 1) { currentLevel++; setLevel(currentLevel); }
@@ -468,14 +415,12 @@ function animate() {
     }
     lastLevelScore = levelScore;
     
-    // UI
     document.getElementById('scoreDisplay').textContent = score;
     document.getElementById('coinDisplay').textContent = coins;
     document.getElementById('distDisplay').textContent = Math.floor(distance);
     const progress = (gameMode === 'endless' ? levelScore / 200 : levelScore / 500) * 100;
     document.getElementById('progressBar').style.width = Math.min(progress, 100) + '%';
     
-    // 粒子
     const pos = particleSystem.geometry.attributes.position.array;
     for(let i = 0; i < pos.length; i += 3) {
       pos[i+2] += speed * 0.6;
@@ -499,7 +444,7 @@ if(maxLevel >= 7) document.getElementById('modeEndless').classList.remove('locke
 setLevel(0);
 initAudio();
 animate();
-console.log('滑板人生 3D 增强版 已加载');
+console.log('滑板人生 3D 已加载');
 </script>
 </body>
 </html>

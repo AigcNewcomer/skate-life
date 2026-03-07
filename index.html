@@ -666,7 +666,7 @@ function checkCollision() {
     var dz = Math.abs(obs.position.z - playerZ);
     var dx = Math.abs(obs.position.x - playerX);
     
-    if(obs.userData.lane === playerLane && dz < 1.5 && dx < 0.8) {
+    if(obs.userData.lane === playerLane && dz < 2.5 && dx < 1.0) {
       return true;
     }
   }

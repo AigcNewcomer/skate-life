@@ -326,7 +326,7 @@ function checkCollision() {
   for(const obs of obstacles) {
     const dz = Math.abs(obs.position.z - playerZ);
     // 使用实际位置判断，给予更大容错空间
-    if(Math.abs(playerX - obs.position.x) < 2.0 && dz < 8.0) return true;
+    if(Math.abs(playerX - obs.position.x) < 2.0 && dz < 10.0) return true;
   }
   return false;
 }

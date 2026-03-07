@@ -276,7 +276,7 @@ function startGame() {
   // 初始障碍物 - 更远
   for(let i = 0; i < 5; i++) {
     spawnObstacles();
-    obstacles.forEach(function(o, idx) { o.position.z = -120 - idx * 100 - Math.random() * 30; });
+    obstacles.forEach(function(o) { o.position.z = -120 - i * 100 - Math.random() * 30; });
     coinItems.forEach(c => c.position.z -= i * 80);
   }
   

@@ -369,7 +369,7 @@ function spawnObstacles() {
         new THREE.BoxGeometry(1, 1, 1),
         new THREE.MeshStandardMaterial({color:0xff3366})
       );
-      obs.position.set(getLaneX(i), 0.5, -CONFIG[difficulty].spawnDist - Math.random()*20);
+      obs.position.set(getLaneX(i), 0.5, -CONFIG[difficulty].spawnDist - i * 30 - Math.random()*20);
       obs.userData.lane = i;  // 记录所在轨道
       scene.add(obs);
       obstacles.push(obs);
@@ -391,7 +391,7 @@ function startGame() {
   setLevel(0);
   
   // 初始障碍物
-  for(var i=0; i<5; i++) {
+  for(var i=0; i<3; i++) {
     spawnObstacles();
   }
   

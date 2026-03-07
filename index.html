@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>滑板人生 - 完整版</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    
+    h1 { color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); margin-bottom: 15px; font-size: 1.8rem; }
+    
+    #gameContainer {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      aspect-ratio: 16/9;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    
+    #gameCanvas { width: 100%; height: 100%; display: block; }
+    
+    #ui {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 1rem;
+      color: #fff;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+      pointer-events: none;
+    }
+    
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    
+    #startScreen { background: rgba(30,30,50,0.95); }
+    #levelSelectScreen { background: rgba(30,30,50,0.98); display: none; }
+    #gameScreen { display: none; }
+    #gameOverScreen { background: rgba(30,30,50,0.95); display: none; }
+    
+    .title { font-size: 2.5rem; color: #fff; margin-bottom: 10px; text-shadow: 0 0 20px rgba(0,255,255,0.5); }
+    .subtitle { color: #aaa; margin-bottom: 20px; font-size: 0.9rem; }
+    
+    .btn {
+      background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+      color: #fff;
+      border: none;
+      padding: 12px 30px;
+      font-size: 1rem;
+      border-radius: 25px;
+      cursor: pointer;
+      margin: 8px;
+      box-shadow: 0 5px 15px rgba(0,212,255,0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .btn:hover { transform: scale(1.05); box-shadow: 0 8px 25px rgba(0,212,255,0.5); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-unlock { background: linear-gradient(135deg, #ff6b6b, #feca57); }
+    .btn-extreme { background: linear-gradient(135deg, #ff0844, #ffb199); animation: pulse 1.5s infinite; }
+    
+    @keyframes pulse { 0%, 100% { box-shadow: 0 0 20px rgba(255,8,68,0.5); } 50% { box-shadow: 0 0 40px rgba(255,8,68,0.8); } }
+    
+    .level-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; max-width: 300px; }
+    .level-btn { padding: 15px; border-radius: 15px; text-align: center; cursor: pointer; transition: transform 0.2s; }
+    .level-btn:hover { transform: scale(1.05); }
+    .level-btn.locked { opacity: 0.5; cursor: not-allowed; }
+    .level-name { font-weight: bold; font-size: 0.9rem; }
+    .level-status { font-size: 0.7rem; margin-top: 5px; }
+    
+    #instructions { color: #888; margin-top: 15px; font-size: 0.85rem; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1 id="gameTitle">🛹 滑板人生</h1>
+  <div id="gameContainer">
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui">
+      <span id="score">⭐ 0</span>
+      <span id="level">关卡 1</span>
+      <span id="time">⏱️ 60s</span>
+    </div>
+    
+    <!-- 开始界面 -->
+    <div id="startScreen" class="screen">
+      <div class="title">🛹 滑板人生</div>
+      <div class="subtitle">8大关卡 + 极限模式</div>
+      <button class="btn" onclick="showLevelSelect()">🎮 开始闯关</button>
+      <button class="btn btn-extreme" id="extremeModeBtn" onclick="startExtremeMode()">🔥 极限模式</button>
+      <div id="extremeLock" style="color: #666; font-size: 0.8rem; margin-top: 10px;">通关所有关卡解锁</div>
+    </div>
+    
+    <!-- 关卡选择 -->
+    <div id="levelSelectScreen" class="screen">
+      <div class="title">选择关卡</div>
+      <div class="level-grid" id="levelGrid"></div>
+      <button class="btn" onclick="showStartScreen()" style="margin-top: 15px;">返回</button>
+    </div>
+    
+    <!-- 游戏结束 -->
+    <div id="gameOverScreen" class="screen">
+      <div id="gameOverText" style="font-size: 2.5rem; margin-bottom: 10px;"></div>
+      <div id="finalScore" style="color: #aaa; font-size: 1.2rem; margin-bottom: 20px;"></div>
+      <button class="btn" onclick="retryLevel()">🔄 重试</button>
+      <button class="btn" onclick="showLevelSelect()">📋 关卡选择</button>
+    </div>
+  </div>
+  <p id="instructions">← → 方向键或A/D键控制移动</p>
+
+  <script>
+    // ==================== 游戏配置 ====================
+    const LEVELS = [
+      { id: 1, name: '粉色浪漫', theme: 'pink', bg: ['#FFB6C1', '#FFC0CB', '#FF69B4'], unlocked: true },
+      { id: 2, name: '热带夏日', theme: 'summer', bg: ['#FFD700', '#FF8C00', '#FF6347'], unlocked: false },
+      { id: 3, name: '森林氧吧', theme: 'forest', bg: ['#90EE90', '#228B22', '#006400'], unlocked: false },
+      { id: 4, name: '极简黑白', theme: 'mono', bg: ['#333', '#666', '#999'], unlocked: false },
+      { id: 5, name: '星空宇宙', theme: 'space', bg: ['#0c1445', '#1a237e', '#311b92'], unlocked: false },
+      { id: 6, name: '冰雪奇缘', theme: 'ice', bg: ['#E3F2FD', '#90CAF9', '#42A5F5'], unlocked: false },
+      { id: 7, name: '沙漠黄昏', theme: 'desert', bg: ['#FF7043', '#FF5722', '#BF360C'], unlocked: false },
+      { id: 8, name: '赛博朋克', theme: 'cyber', bg: ['#7B1FA2', '#4A148C', '#00BCD4'], unlocked: false },
+    ];
+    
+    // ==================== 游戏状态 ====================
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    function resizeCanvas() {
+      canvas.width = 480;
+      canvas.height = 270;
+    }
+    resizeCanvas();
+    
+    let gameRunning = false;
+    let currentLevel = 1;
+    let isExtremeMode = false;
+    let score = 0;
+    let timeLeft = 60;
+    let player = { x: 50, y: 200, width: 30, height: 40, speed: 4 };
+    let obstacles = [];
+    let decorations = [];
+    let clouds = [];
+    let gameLoop = null;
+    let timerLoop = null;
+    
+    // ==================== 主题配置 ====================
+    function getThemeConfig(levelId) {
+      const level = LEVELS[levelId - 1] || LEVELS[0];
+      return {
+        bg: level.bg,
+        obstacle: level.theme === 'cyber' ? '#00FFFF' : 
+                 level.theme === 'ice' ? '#4FC3F7' :
+                 level.theme === 'summer' ? '#FF5722' :
+                 level.theme === 'forest' ? '#4CAF50' :
+                 level.theme === 'desert' ? '#FF7043' : '#FF69B4',
+        player: level.theme === 'mono' ? '#fff' : '#FF69B4',
+        ground: level.bg[2],
+        text: level.theme === 'space' ? '#fff' : '#333'
+      };
+    }
+    
+    // ==================== 界面控制 ====================
+    function showStartScreen() {
+      document.getElementById('startScreen').style.display = 'flex';
+      document.getElementById('levelSelectScreen').style.display = 'none';
+      document.getElementById('gameScreen').style.display = 'none';
+      document.getElementById('gameOverScreen').style.display = 'none';
+      updateExtremeModeButton();
+    }
+    
+    function showLevelSelect() {
+      document.getElementById('startScreen').style.display = 'none';
+      document.getElementById('levelSelectScreen').style.display = 'flex';
+      renderLevelGrid();
+    }
+    
+    function renderLevelGrid() {
+      const grid = document.getElementById('levelGrid');
+      grid.innerHTML = '';
+      
+      LEVELS.forEach((level, idx) => {
+        const btn = document.createElement('div');
+        btn.className = 'level-btn ' + (level.unlocked ? '' : 'locked');
+        btn.style.background = `linear-gradient(135deg, ${level.bg[0]}, ${level.bg[2]})`;
+        btn.innerHTML = `
+          <div class="level-name">${level.id}. ${level.name}</div>
+          <div class="level-status">${level.unlocked ? '✅ 可玩' : '🔒 未解锁'}</div>
+        `;
+        
+        if (level.unlocked) {
+          btn.onclick = () => startLevel(level.id);
+        }
+        
+        grid.appendChild(btn);
+      });
+    }
+    
+    function updateExtremeModeButton() {
+      const btn = document.getElementById('extremeModeBtn');
+      const lock = document.getElementById('extremeLock');
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      lock.style.display = 'none';
+    }
+    
+    function startLevel(levelId) {
+      currentLevel = levelId;
+      isExtremeMode = false;
+      startGame();
+    }
+    
+    function startExtremeMode() {
+      isExtremeMode = true;
+      currentLevel = Math.floor(Math.random() * 8) + 1;
+      startGame();
+    }
+    
+    // ==================== 游戏逻辑 ====================
+    function startGame() {
+      gameRunning = true;
+      score = 0;
+      timeLeft = 60;
+      player = { x: 50, y: 200, width: 30, height: 40, speed: 5 };
+      
+      initDecorations();
+      initObstacles();
+      
+      document.getElementById('startScreen').style.display = 'none';
+      document.getElementById('levelSelectScreen').style.display = 'none';
+      document.getElementById('gameOverScreen').style.display = 'none';
+      document.getElementById('ui').style.display = 'flex';
+      
+      updateTheme();
+      updateUI();
+      
+      if (gameLoop) cancelAnimationFrame(gameLoop);
+      if (timerLoop) clearInterval(timerLoop);
+      
+      gameLoopFn();
+      startTimer();
+    }
+    
+    function updateTheme() {
+      const theme = getThemeConfig(currentLevel);
+      const container = document.getElementById('gameContainer');
+      container.style.background = `linear-gradient(180deg, ${theme.bg[0]} 0%, ${theme.bg[1]} 60%, ${theme.bg[2]} 100%)`;
+      document.getElementById('gameTitle').style.color = theme.text;
+    }
+    
+    function updateUI() {
+      document.getElementById('score').textContent = '⭐ ' + score;
+      document.getElementById('time').textContent = '⏱️ ' + timeLeft + 's';
+      document.getElementById('level').textContent = isExtremeMode ? '🔥 极限' : '关卡 ' + currentLevel;
+    }
+    
+    function initDecorations() {
+      decorations = [];
+      clouds = [];
+      
+      for (let i = 0; i < 5; i++) {
+        clouds.push({
+          x: Math.random() * canvas.width,
+          y: 20 + Math.random() * 50,
+          size: 20 + Math.random() * 30,
+          speed: 0.2 + Math.random() * 0.3
+        });
+      }
+      
+      for (let i = 0; i < 8; i++) {
+        decorations.push({
+          x: Math.random() * canvas.width,
+          y: 30 + Math.random() * 80,
+          type: Math.random() > 0.5 ? 'heart' : 'star',
+          size: 10 + Math.random() * 15,
+          speed: 0.3 + Math.random() * 0.5,
+          opacity: 0.3 + Math.random() * 0.5
+        });
+      }
+    }
+    
+    function initObstacles() {
+      obstacles = [];
+      const count = 5 + currentLevel * 1;
+      
+      for (let i = 0; i < count; i++) {
+        obstacles.push({
+          x: 150 + i * 60 + Math.random() * 30,
+          y: 160 + Math.random() * 60,
+          width: 25 + currentLevel * 2,
+          height: 25 + currentLevel * 2,
+          speed: 1.5 + currentLevel * 0.3 + Math.random(),
+          type: Math.random() > 0.6 ? 'danger' : 'block'
+        });
+      }
+    }
+    
+    // ==================== 绘制函数 ====================
+    function drawClouds() {
+      const theme = getThemeConfig(currentLevel);
+      ctx.fillStyle = theme.bg[2];
+      ctx.globalAlpha = 0.3;
+      
+      clouds.forEach(cloud => {
+        ctx.beginPath();
+        ctx.arc(cloud.x, cloud.y, cloud.size * 0.6, 0, Math.PI * 2);
+        ctx.arc(cloud.x + cloud.size * 0.5, cloud.y - cloud.size * 0.2, cloud.size * 0.5, 0, Math.PI * 2);
+        ctx.arc(cloud.x + cloud.size, cloud.y, cloud.size * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        cloud.x -= cloud.speed;
+        if (cloud.x + cloud.size * 2 < 0) {
+          cloud.x = canvas.width + cloud.size;
+        }
+      });
+      ctx.globalAlpha = 1;
+    }
+    
+    function drawDecorations() {
+      decorations.forEach(dec => {
+        ctx.globalAlpha = dec.opacity;
+        ctx.font = dec.size + 'px Arial';
+        
+        if (dec.type === 'heart') {
+          ctx.fillText('💖', dec.x, dec.y);
+        } else {
+          ctx.fillText('⭐', dec.x, dec.y);
+        }
+        
+        dec.y += dec.speed;
+        if (dec.y > canvas.height) {
+          dec.y = 0;
+          dec.x = Math.random() * canvas.width;
+        }
+      });
+      ctx.globalAlpha = 1;
+    }
+    
+    function drawGround() {
+      const theme = getThemeConfig(currentLevel);
+      const gradient = ctx.createLinearGradient(0, 180, 0, canvas.height);
+      gradient.addColorStop(0, theme.bg[1]);
+      gradient.addColorStop(1, theme.bg[2]);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 180, canvas.width, 90);
+      
+      ctx.strokeStyle = theme.bg[2];
+      ctx.globalAlpha = 0.3;
+      ctx.lineWidth = 2;
+      for (let i = 0; i < canvas.width; i += 30) {
+        ctx.beginPath();
+        ctx.moveTo(i, 180);
+        ctx.lineTo(i + 15, canvas.height);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      
+      ctx.fillStyle = '#FFD700';
+      ctx.fillRect(canvas.width - 30, 150, 5, 120);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 12px Arial';
+      ctx.fillText('终点', canvas.width - 35, 145);
+    }
+    
+    function drawPlayer() {
+      const theme = getThemeConfig(currentLevel);
+      const { x, y, width, height } = player;
+      
+      ctx.fillStyle = '#8B4513';
+      ctx.beginPath();
+      ctx.ellipse(x + width/2, y + height - 5, width/2 + 5, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = theme.player;
+      ctx.fillRect(x + 5, y + 15, width - 10, height - 20);
+      
+      ctx.fillStyle = '#FFDAB9';
+      ctx.beginPath();
+      ctx.arc(x + width/2, y + 10, 12, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = theme.player;
+      ctx.beginPath();
+      ctx.arc(x + width/2, y + 5, 10, Math.PI, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.arc(x + width/2 - 4, y + 10, 2, 0, Math.PI * 2);
+      ctx.arc(x + width/2 + 4, y + 10, 2, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = theme.player;
+      ctx.beginPath();
+      ctx.moveTo(x + width/2, y + 15);
+      ctx.quadraticCurveTo(x + width + 5, y + 10, x + width + 8, y + 20);
+      ctx.lineTo(x + width/2 + 5, y + 20);
+      ctx.fill();
+    }
+    
+    function drawObstacles() {
+      const theme = getThemeConfig(currentLevel);
+      
+      obstacles.forEach(obs => {
+        if (obs.type === 'danger') {
+          ctx.fillStyle = theme.obstacle;
+          ctx.font = obs.width + 'px Arial';
+          ctx.fillText('⚠️', obs.x, obs.y + obs.height);
+        } else {
+          const gradient = ctx.createLinearGradient(obs.x, obs.y, obs.x + obs.width, obs.y + obs.height);
+          gradient.addColorStop(0, theme.obstacle);
+          gradient.addColorStop(1, theme.bg[2]);
+          ctx.fillStyle = gradient;
+          
+          ctx.beginPath();
+          ctx.roundRect(obs.x, obs.y, obs.width, obs.height, 5);
+          ctx.fill();
+          
+          ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(obs.x + 5, obs.y + 5);
+          ctx.lineTo(obs.x + obs.width - 5, obs.y + 5);
+          ctx.stroke();
+        }
+      });
+    }
+    
+    function checkCollision() {
+      const p = player;
+      
+      for (let obs of obstacles) {
+        if (p.x < obs.x + obs.width &&
+            p.x + p.width > obs.x &&
+            p.y < obs.y + obs.height &&
+            p.y + p.height > obs.y) {
+          return true;
+        }
+      }
+      return false;
+    }
+    
+    // ==================== 游戏循环 ====================
+    function update() {
+      if (!gameRunning) return;
+      
+      obstacles.forEach(obs => {
+        obs.x -= obs.speed;
+        if (obs.x + obs.width < 0) {
+          obs.x = canvas.width + Math.random() * 50;
+          obs.y = 160 + Math.random() * 60;
+          score += 10;
+        }
+      });
+      
+      if (player.x + player.width >= canvas.width - 30) {
+        levelComplete();
+        return;
+      }
+      
+      if (checkCollision()) {
+        gameOver(false);
+        return;
+      }
+      
+      updateUI();
+    }
+    
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      drawClouds();
+      drawDecorations();
+      drawGround();
+      drawObstacles();
+      drawPlayer();
+    }
+    
+    function gameLoopFn() {
+      update();
+      draw();
+      gameLoop = requestAnimationFrame(gameLoopFn);
+    }
+    
+    function startTimer() {
+      timerLoop = setInterval(() => {
+        if (!gameRunning) return;
+        timeLeft--;
+        updateUI();
+        
+        if (timeLeft <= 0) {
+          gameOver(false);
+        }
+      }, 1000);
+    }
+    
+    function levelComplete() {
+      gameRunning = false;
+      if (gameLoop) cancelAnimationFrame(gameLoop);
+      if (timerLoop) clearInterval(timerLoop);
+      
+      if (currentLevel < 8 && !LEVELS[currentLevel].unlocked) {
+        LEVELS[currentLevel].unlocked = true;
+      }
+      
+      if (isExtremeMode) {
+        currentLevel = Math.floor(Math.random() * 8) + 1;
+        initObstacles();
+        startGame();
+        return;
+      }
+      
+      const totalScore = score + timeLeft * 10;
+      document.getElementById('gameOverText').textContent = '🎉 第' + currentLevel + '关通关！';
+      document.getElementById('finalScore').textContent = '得分：' + totalScore + ' ⭐';
+      document.getElementById('gameOverScreen').style.display = 'flex';
+    }
+    
+    function gameOver(won) {
+      gameRunning = false;
+      if (gameLoop) cancelAnimationFrame(gameLoop);
+      if (timerLoop) clearInterval(timerLoop);
+      
+      const gameOverText = document.getElementById('gameOverText');
+      const finalScore = document.getElementById('finalScore');
+      
+      if (won) {
+        gameOverText.textContent = '🎉 通关成功！';
+      } else {
+        gameOverText.textContent = '💔 挑战失败';
+      }
+      finalScore.textContent = '得分：' + score + ' ⭐';
+      
+      document.getElementById('gameOverScreen').style.display = 'flex';
+    }
+    
+    function retryLevel() {
+      startGame();
+    }
+    
+    // ==================== 输入控制 ====================
+    const keys = {};
+    document.addEventListener('keydown', (e) => {
+      keys[e.key] = true;
+      if (['ArrowLeft', 'ArrowRight', 'a', 'd', 'A', 'D'].indexOf(e.key) >= 0) {
+        e.preventDefault();
+      }
+    });
+    document.addEventListener('keyup', (e) => {
+      keys[e.key] = false;
+    });
+    
+    let touchStartX = 0;
+    canvas.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+    });
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const touchX = e.touches[0].clientX;
+      const diff = touchX - touchStartX;
+      if (Math.abs(diff) > 10) {
+        player.x += diff > 0 ? player.speed : -player.speed;
+        touchStartX = touchX;
+      }
+      player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+    });
+    
+    setInterval(() => {
+      if (!gameRunning) return;
+      
+      if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
+        player.x -= player.speed;
+      }
+      if (keys['ArrowRight'] || keys['d'] || keys['D']) {
+        player.x += player.speed;
+      }
+      
+      player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+    }, 16);
+    
+    showStartScreen();
+  </script>
+</body>
+</html>

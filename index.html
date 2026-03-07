@@ -212,7 +212,7 @@ function gameOver() {
 function checkCollision() {
   for(var k=0; k<obstacles.length; k++) {
     var obs = obstacles[k];
-    if(Math.abs(obs.position.x - playerX) < 1 && Math.abs(obs.position.z) < 1) return true;
+    if(Math.abs(obs.position.x - playerX) < 1 && Math.abs(obs.position.z - player.position.z) < 2) return true;
   }
   return false;
 }

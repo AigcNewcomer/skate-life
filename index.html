@@ -113,7 +113,7 @@ scene.add(grid);
 
 console.log('[3] Ground added');
 
-// Player - 使用Cylinder代替Capsule
+// Player
 var player = new THREE.Group();
 
 var boardMesh = new THREE.Mesh(
@@ -197,6 +197,12 @@ window.startGame = function() {
   playerX = 0;
   targetX = 0;
   
+  // 重置障碍物
+  obstacles.forEach(function(o) {
+    o.position.z = -50-Math.random()*30;
+    o.position.x = (Math.random()-0.5)*CONFIG.laneWidth;
+  });
+  
   document.getElementById('startScreen').style.display = 'none';
   document.getElementById('gameUI').style.display = 'flex';
   console.log('[8] Game running');
@@ -209,10 +215,14 @@ function gameOver() {
   document.getElementById('gameUI').style.display = 'none';
 }
 
+// Collision - 3D distance
 function checkCollision() {
   for(var k=0; k<obstacles.length; k++) {
     var obs = obstacles[k];
-    if(Math.abs(obs.position.x - playerX) < 1 && Math.abs(obs.position.z - player.position.z) < 1.2) return true;
+    var dx = Math.abs(obs.position.x - player.position.x);
+    var dy = Math.abs(obs.position.y - player.position.y);
+    var dz = Math.abs(obs.position.z - player.position.z);
+    if(dx < 0.8 && dy < 1.2 && dz < 0.8) return true;
   }
   return false;
 }

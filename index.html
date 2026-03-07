@@ -824,7 +824,7 @@ function gameLoop() {
   renderer.render(scene, camera);
 }
 
-window.addEventListener(resize, function() {
+window.addEventListener('resize', function() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -833,7 +833,7 @@ window.addEventListener(resize, function() {
 init();
 gameLoop();
 
-console.log(滑板人生 3D 精致版 初始化完成);
+console.log('滑板人生 3D 精致版 初始化完成');
 </script>
 </body>
 </html>

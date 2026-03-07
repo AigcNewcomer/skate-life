@@ -303,7 +303,7 @@ function checkCollision() {
   
   for(const obs of obstacles) {
     const dz = Math.abs(obs.position.z - playerZ);
-    if(obs.userData.lane === Math.round(playerLane) && dz < 3.5) {
+    if(obs.userData.lane === Math.round(playerLane) && dz < 5.0) {
       return true;
     }
   }

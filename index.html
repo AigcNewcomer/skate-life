@@ -58,12 +58,18 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-console.log('脚本加载 - 版本 5');
+console.log('脚本加载 - v6');
 
 // 配置
-const CONFIG = {
-  themes: { pink: {bg:0x1a0a15,ground:0xff69b4,accent:0xff1493}, green: {bg:0x0a150a,ground:0x00ff88,accent:0x00ff00}, blue: {bg:0x0a0a1a,ground:0x00ffff,accent:0x0088ff}, purple: {bg:0x150a1a,ground:0xff00ff,accent:0x8800ff} },
-  laneWidth: 8, speed: 0.4
+var CONFIG = {
+  themes: { 
+    pink: {bg:0x1a0a15,ground:0xff69b4,accent:0xff1493}, 
+    green: {bg:0x0a150a,ground:0x00ff88,accent:0x00ff00}, 
+    blue: {bg:0x0a0a1a,ground:0x00ffff,accent:0x0088ff}, 
+    purple: {bg:0x150a1a,ground:0xff00ff,accent:0x8800ff} 
+  },
+  laneWidth: 8, 
+  speed: 0.4
 };
 
 var currentTheme = 'pink';
@@ -74,7 +80,7 @@ var playerX = 0;
 var targetX = 0;
 var obstacles = [];
 
-// Three.js
+// Three.js 场景
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.position.set(0, 3.5, 6);
@@ -92,7 +98,10 @@ pointLight.position.set(0, 5, 0);
 scene.add(pointLight);
 
 // 地面
-var ground = new THREE.Mesh(new THREE.PlaneGeometry(30, 200), new THREE.MeshStandardMaterial({ color: 0xff69b4, emissive: 0xff1493, emissiveIntensity: 0.1 }));
+var ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(30, 200), 
+  new THREE.MeshStandardMaterial({ color: 0xff69b4, emissive: 0xff1493, emissiveIntensity: 0.1 })
+);
 ground.rotation.x = -Math.PI / 2;
 ground.position.z = -80;
 scene.add(ground);
@@ -101,22 +110,49 @@ var grid = new THREE.GridHelper(200, 80, 0x00ffff, 0x222244);
 grid.position.z = -80;
 scene.add(grid);
 
-// 玩家
+// 玩家 - 修复：正确创建mesh
 var player = new THREE.Group();
-player.add(new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.08, 2.2), new THREE.MeshStandardMaterial({ color: 0x333333 })).position.y = 0.15);
-player.add(new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 0.5, 4, 8), new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00ffff })).position.y = 0.9);
-player.add(new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 16), new THREE.MeshStandardMaterial({ color: 0xffdbac })).position.y = 1.55);
+
+// 滑板
+var boardMesh = new THREE.Mesh(
+  new THREE.BoxGeometry(1.2, 0.08, 2.2), 
+  new THREE.MeshStandardMaterial({ color: 0x333333 })
+);
+boardMesh.position.y = 0.15;
+player.add(boardMesh);
+
+// 身体
+var bodyMesh = new THREE.Mesh(
+  new THREE.CapsuleGeometry(0.25, 0.5, 4, 8), 
+  new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00ffff })
+);
+bodyMesh.position.y = 0.9;
+player.add(bodyMesh);
+
+// 头
+var headMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(0.22, 16, 16), 
+  new THREE.MeshStandardMaterial({ color: 0xffdbac })
+);
+headMesh.position.y = 1.55;
+player.add(headMesh);
+
 player.position.y = 0.5;
 scene.add(player);
+console.log('玩家已创建, children:', player.children.length);
 
 // 障碍物
 function spawnObstacle() {
-  var obs = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xff3366 }));
+  var obs = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1, 1), 
+    new THREE.MeshStandardMaterial({ color: 0xff3366 })
+  );
   obs.position.set((Math.random() - 0.5) * CONFIG.laneWidth, 0.5, -50 - Math.random() * 30);
   scene.add(obs);
   obstacles.push(obs);
 }
 for (var i = 0; i < 15; i++) spawnObstacle();
+console.log('障碍物已创建, count:', obstacles.length);
 
 // 主题
 function setTheme(t) {
@@ -149,29 +185,25 @@ document.addEventListener('mousemove', function(e) {
 });
 document.addEventListener('mouseup', function() { if (gameRunning) targetX = 0; });
 
-// 按钮
-document.getElementById('startBtn').onclick = function() {
-  console.log('按钮被点击');
-  startGame();
-};
-
-function startGame() {
-  console.log('开始游戏 - 重置状态');
+// 开始游戏
+window.startGame = function() {
+  console.log('开始游戏');
   gameRunning = true;
   score = 0;
   distance = 0;
   playerX = 0;
   targetX = 0;
   
-  // 重置障碍物
+  // 重置障碍物位置
   for (var j = 0; j < obstacles.length; j++) {
     obstacles[j].position.z = -50 - Math.random() * 30;
+    obstacles[j].position.x = (Math.random() - 0.5) * CONFIG.laneWidth;
   }
   
   document.getElementById('startScreen').style.display = 'none';
   document.getElementById('gameUI').style.display = 'flex';
-  console.log('游戏UI已显示');
-}
+  console.log('游戏已启动, obstacles:', obstacles.length);
+};
 
 function gameOver() {
   console.log('游戏结束');
@@ -188,7 +220,7 @@ function checkCollision() {
   return false;
 }
 
-// 游戏循环 - 使用 setInterval 确保运行
+// 游戏循环
 function gameLoop() {
   if (gameRunning) {
     // 玩家移动
@@ -210,15 +242,15 @@ function gameLoop() {
       }
     }
     
-    // 随机生成
+    // 随机生成新障碍物
     if (Math.random() < 0.015) spawnObstacle();
     
-    // 碰撞
+    // 碰撞检测
     if (checkCollision()) {
       gameOver();
     }
     
-    // 分数
+    // 更新分数
     distance += CONFIG.speed;
     score = Math.floor(distance);
     document.getElementById('scoreDisplay').textContent = score;
@@ -229,7 +261,7 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-// 启动游戏循环
+// 启动
 gameLoop();
 console.log('游戏循环已启动');
 

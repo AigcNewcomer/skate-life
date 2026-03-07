@@ -424,7 +424,7 @@ function checkCollision() {
     var dz = Math.abs(obs.position.z - playerZ);
     
     // 如果在同一轨道且距离近
-    if(obs.userData.lane === playerLane && dz < 2.5) {
+    if(obs.userData.lane === playerLane && dz < 3.5) {
       return true;
     }
   }

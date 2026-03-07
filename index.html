@@ -5,113 +5,45 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <title>滑板人生</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-#start { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(180deg, #1a0a20 0%, #0a0a1a 100%); z-index: 100; }
+* { margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a1a; font-family: sans-serif; }
+#game { display: block; width: 100%; height: 100%; }
+#start { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(180deg, #1a0a20, #0a0a1a); z-index: 10; }
 #start.hidden { display: none; }
-h1 { color: #0ff; font-size: 2.5rem; margin-bottom: 10px; }
-p { color: #888; margin-bottom: 30px; }
-#startBtn { background: linear-gradient(135deg, #0ff, #f0f); color: #fff; border: none; padding: 18px 60px; font-size: 1.3rem; border-radius: 30px; cursor: pointer; }
-#ui { position: absolute; top: 20px; left: 20px; right: 20px; display: none; justify-content: space-between; z-index: 50; }
+h1 { color: #0ff; font-size: 3rem; text-shadow: 0 0 20px #0ff; margin-bottom: 20px; }
+#startBtn { background: linear-gradient(135deg, #0ff, #f0f); color: #fff; border: none; padding: 20px 60px; font-size: 1.5rem; border-radius: 40px; cursor: pointer; margin: 10px; }
+#ui { position: absolute; top: 20px; left: 20px; right: 20px; display: none; justify-content: space-between; z-index: 5; }
 #ui.show { display: flex; }
-.score { background: rgba(0,0,0,0.7); padding: 12px 24px; border-radius: 24px; color: #fff; font-weight: bold; }
+.sc { background: rgba(0,0,0,0.8); padding: 15px 25px; border-radius: 25px; color: #fff; font-size: 1.2rem; font-weight: bold; }
 </style>
 </head>
 <body>
+<canvas id="game"></canvas>
 <div id="start">
 <h1>🛹 滑板人生</h1>
-<p>3D跑酷游戏</p>
 <button id="startBtn">开始游戏</button>
-<p style="margin-top:20px;font-size:12px">左右滑动控制方向</p>
 </div>
 <div id="ui">
-<div class="score">⭐ <span id="scoreDisplay">0</span></div>
-<div class="score">🏃 <span id="distDisplay">0</span>m</div>
+<div class="sc">⭐ <span id="sc">0</span></div>
+<div class="sc">🏃 <span id="di">0</span>m</div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// 初始化
+// Canvas 版本 - 不依赖任何外部库
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
 const startScreen = document.getElementById('start');
 const gameUI = document.getElementById('ui');
+const scoreEl = document.getElementById('sc');
+const distEl = document.getElementById('di');
 const startBtn = document.getElementById('startBtn');
-const scoreDisplay = document.getElementById('scoreDisplay');
-const distDisplay = document.getElementById('distDisplay');
 
-console.log('Three.js:', typeof THREE);
-
-// 场景
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0a0a1a);
-scene.fog = new THREE.Fog(0x0a0a1a, 10, 40);
-
-// 相机
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 3, 6);
-camera.lookAt(0, 0, -5);
-
-// 渲染器
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-document.body.appendChild(renderer.domElement);
-
-// 灯光
-scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-const dirLight = new THREE.DirectionalLight(0x00ffff, 0.8);
-dirLight.position.set(5, 10, 5);
-scene.add(dirLight);
-
-// 地面
-const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(20, 200),
-  new THREE.MeshStandardMaterial({ color: 0x00ffff })
-);
-ground.rotation.x = -Math.PI / 2;
-ground.position.z = -80;
-scene.add(ground);
-
-// 玩家
-const player = new THREE.Group();
-
-// 滑板
-const board = new THREE.Mesh(
-  new THREE.BoxGeometry(0.8, 0.1, 1.5),
-  new THREE.MeshStandardMaterial({ color: 0x8b4513 })
-);
-board.position.y = 0.2;
-player.add(board);
-
-// 身体
-const body = new THREE.Mesh(
-  new THREE.CapsuleGeometry(0.25, 0.5, 4, 8),
-  new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x004444 })
-);
-body.position.y = 0.9;
-player.add(body);
-
-// 头
-const head = new THREE.Mesh(
-  new THREE.SphereGeometry(0.2, 8, 8),
-  new THREE.MeshStandardMaterial({ color: 0xffdbac })
-);
-head.position.y = 1.5;
-player.add(head);
-
-player.position.y = 0.5;
-scene.add(player);
-
-// 障碍物
-let obstacles = [];
-function spawnObstacle() {
-  const obs = new THREE.Mesh(
-    new THREE.BoxGeometry(0.8, 1, 0.8),
-    new THREE.MeshStandardMaterial({ color: 0xff4444 })
-  );
-  obs.position.set((Math.random() - 0.5) * 6, 0.5, -50 - Math.random() * 30);
-  scene.add(obs);
-  obstacles.push(obs);
+// 调整画布大小
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 }
-for (let i = 0; i < 15; i++) spawnObstacle();
+resize();
+window.addEventListener('resize', resize);
 
 // 游戏状态
 let running = false;
@@ -120,144 +52,180 @@ let distance = 0;
 let playerX = 0;
 let targetX = 0;
 
-// 输入控制
-let isTouching = false;
-let touchStartX = 0;
+// 玩家
+const player = { x: 0, y: 0, width: 40, height: 60, color: '#00ffff' };
 
-function handleStart(x) {
-  touchStartX = x;
-  isTouching = true;
-}
+// 障碍物
+let obstacles = [];
+const OBS_WIDTH = 40;
+const OBS_HEIGHT = 40;
 
-function handleMove(x) {
-  if (!running || !isTouching) return;
-  targetX = ((x - touchStartX) / window.innerWidth) * 8;
+// 主题颜色
+const themes = [
+  { bg: '#1a0a15', ground: '#ff69b4', accent: '#ff1493' },
+  { bg: '#0a1a15', ground: '#00ff88', accent: '#00ff00' },
+  { bg: '#0a0a1a', ground: '#00ffff', accent: '#ff00ff' }
+];
+let themeIndex = 0;
+
+// 输入
+let touching = false;
+let lastTouchX = 0;
+
+function handleInput(x) {
+  if (!running) return;
+  const cx = canvas.width / 2;
+  targetX = (x - cx) / cx * 3;
   targetX = Math.max(-3, Math.min(3, targetX));
 }
 
-function handleEnd() {
-  isTouching = false;
-  targetX = 0;
-}
-
-// 鼠标事件
-document.addEventListener('mousedown', e => handleStart(e.clientX));
-document.addEventListener('mousemove', e => handleMove(e.clientX));
-document.addEventListener('mouseup', handleEnd);
-
-// 触摸事件
-document.addEventListener('touchstart', e => {
+canvas.addEventListener('touchstart', e => {
+  touching = true;
+  lastTouchX = e.touches[0].clientX;
+});
+canvas.addEventListener('touchmove', e => {
   e.preventDefault();
-  handleStart(e.touches[0].clientX);
-}, { passive: false });
-
-document.addEventListener('touchmove', e => {
-  e.preventDefault();
-  handleMove(e.touches[0].clientX);
-}, { passive: false });
-
-document.addEventListener('touchend', handleEnd);
+  handleInput(e.touches[0].clientX);
+  lastTouchX = e.touches[0].clientX;
+});
+canvas.addEventListener('touchend', () => { touching = false; targetX = 0; });
+canvas.addEventListener('mousemove', e => handleInput(e.clientX));
+canvas.addEventListener('mousedown', e => handleInput(e.clientX));
+canvas.addEventListener('mouseup', () => targetX = 0);
 
 // 按钮点击
-startBtn.addEventListener('click', function() {
-  console.log('按钮被点击');
+startBtn.onclick = () => {
+  console.log('点击开始');
   startGame();
-});
+};
 
-startBtn.addEventListener('touchstart', function(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  console.log('按钮触摸');
-  startGame();
-}, { passive: false });
-
+// 开始游戏
 function startGame() {
-  console.log('开始游戏被调用');
-  
-  // 重置
-  obstacles.forEach(o => scene.remove(o));
+  console.log('startGame');
   obstacles = [];
-  for (let i = 0; i < 15; i++) spawnObstacle();
-  
+  for(let i = 0; i < 10; i++) {
+    obstacles.push({
+      x: (Math.random() - 0.5) * canvas.width * 0.8,
+      y: -Math.random() * 500 - 100,
+      w: OBS_WIDTH,
+      h: OBS_HEIGHT,
+      speed: 3 + Math.random() * 2
+    });
+  }
   score = 0;
   distance = 0;
   playerX = 0;
   targetX = 0;
+  themeIndex = Math.floor(Math.random() * themes.length);
   
-  // 切换界面
   startScreen.classList.add('hidden');
   gameUI.classList.add('show');
-  
   running = true;
-  console.log('游戏已开始');
-}
-
-function gameOver() {
-  running = false;
-  startScreen.classList.remove('hidden');
-  gameUI.classList.remove('show');
 }
 
 // 碰撞检测
 function checkCollision() {
-  for (let obs of obstacles) {
-    const dx = Math.abs(obs.position.x - playerX);
-    const dz = Math.abs(obs.position.z);
-    if (dx < 0.8 && dz < 0.8) return true;
+  const px = playerX * (canvas.width / 8);
+  const py = canvas.height - 150;
+  for (let o of obstacles) {
+    if (Math.abs(o.x - px) < 50 && Math.abs(o.y - py) < 50) return true;
   }
   return false;
 }
 
-// 游戏循环
-function animate() {
-  requestAnimationFrame(animate);
+// 绘制
+function draw() {
+  const theme = themes[themeIndex];
   
-  if (running) {
-    // 玩家移动
-    playerX += (targetX - playerX) * 0.1;
-    player.position.x = playerX;
-    player.rotation.z = (targetX - playerX) * 0.15;
-    player.position.y = 0.5 + Math.sin(Date.now() * 0.01) * 0.1;
-    
-    // 障碍物移动
-    obstacles.forEach(o => o.position.z += 0.25);
-    
-    // 移除和生成
-    obstacles = obstacles.filter(o => {
-      if (o.position.z > 10) {
-        scene.remove(o);
-        return false;
-      }
-      return true;
-    });
-    
-    if (Math.random() < 0.02) spawnObstacle();
-    
-    // 碰撞检测
-    if (checkCollision()) {
-      gameOver();
-    }
-    
-    // 更新分数
-    distance += 0.25;
-    score = Math.floor(distance);
-    scoreDisplay.textContent = score;
-    distDisplay.textContent = Math.floor(distance);
+  // 背景
+  ctx.fillStyle = theme.bg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // 地面
+  ctx.fillStyle = theme.ground;
+  ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+  
+  // 地面线
+  ctx.strokeStyle = theme.accent;
+  ctx.lineWidth = 2;
+  for (let i = 0; i < 20; i++) {
+    const x = (i * 100 - (distance * 2) % 100);
+    ctx.beginPath();
+    ctx.moveTo(x, canvas.height - 100);
+    ctx.lineTo(x + 50, canvas.height);
+    ctx.stroke();
   }
   
-  renderer.render(scene, camera);
+  if (!running && obstacles.length === 0) return;
+  
+  // 玩家
+  const px = canvas.width / 2 + playerX * (canvas.width / 8);
+  const py = canvas.height - 150;
+  
+  // 滑板
+  ctx.fillStyle = '#8b4513';
+  ctx.fillRect(px - 25, py + 40, 50, 10);
+  
+  // 身体
+  ctx.fillStyle = theme.accent;
+  ctx.beginPath();
+  ctx.arc(px, py, 20, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // 头
+  ctx.fillStyle = '#ffdbac';
+  ctx.beginPath();
+  ctx.arc(px, py - 30, 15, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // 障碍物
+  for (let o of obstacles) {
+    ctx.fillStyle = '#ff4444';
+    ctx.fillRect(o.x - o.w/2, o.y - o.h/2, o.w, o.h);
+  }
 }
 
-// 窗口大小调整
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+// 游戏循环
+function update() {
+  if (!running) return;
+  
+  // 玩家移动
+  playerX += (targetX - playerX) * 0.15;
+  
+  // 障碍物移动
+  for (let o of obstacles) {
+    o.y += o.speed;
+    // 超出屏幕重新生成
+    if (o.y > canvas.height + 50) {
+      o.y = -50;
+      o.x = (Math.random() - 0.5) * canvas.width * 0.8;
+      o.speed = 3 + Math.random() * 2;
+    }
+  }
+  
+  // 碰撞
+  if (checkCollision()) {
+    running = false;
+    startScreen.classList.remove('hidden');
+    gameUI.classList.remove('show');
+    return;
+  }
+  
+  // 分数
+  distance += 0.5;
+  score = Math.floor(distance);
+  scoreEl.textContent = score;
+  distEl.textContent = Math.floor(distance);
+}
 
-// 启动
-animate();
-console.log('游戏初始化完成');
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+loop();
+console.log('游戏就绪');
 </script>
 </body>
 </html>

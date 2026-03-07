@@ -3,101 +3,249 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>滑板人生 - 第2关：热带夏日</title>
+<title>滑板人生 - 3D跑酷</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Orbitron', sans-serif; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #000;
+  font-family: 'Orbitron', sans-serif;
+}
+
 #game { width: 100%; height: 100%; }
 
-/* 热带夏日主题 - 开始屏幕 */
-#startScreen { 
-  position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
-  display: flex; flex-direction: column; align-items: center; justify-content: center; 
-  background: linear-gradient(180deg, #1a0a30 0%, #ff8c00 20%, #ffd700 40%, #00ced1 70%, #87ceeb 100%);
+/* 开始/结束界面 */
+.screen {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   z-index: 100;
+  transition: opacity 0.5s;
 }
-#startScreen.hidden { display: none; }
 
-.sun { position: absolute; top: 10%; right: 15%; width: 80px; height: 80px; background: radial-gradient(circle, #ffd700, #ff8c00); border-radius: 50%; box-shadow: 0 0 60px #ffd700, 0 0 100px #ff8c00; animation: sunPulse 3s infinite ease-in-out; }
-@keyframes sunPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+.screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
 
-.palm { position: absolute; bottom: 0; font-size: 120px; opacity: 0.3; }
-.palm.left { left: 5%; transform: scaleX(-1); }
-.palm.right { right: 5%; }
+#startScreen {
+  background: linear-gradient(180deg, #0d0015 0%, #1a0a2e 50%, #0d0015 100%);
+}
 
-.title { font-size: clamp(2rem, 8vw, 4rem); color: #fff; text-shadow: 0 0 30px #ff8c00, 0 0 60px #ffd700; margin-bottom: 10px; animation: glow 2s infinite alternate; }
-@keyframes glow { from { text-shadow: 0 0 30px #ff8c00; } to { text-shadow: 0 0 40px #ffd700, 0 0 80px #00ced1; } }
+#gameOverScreen {
+  background: rgba(0,0,0,0.9);
+}
 
-.subtitle { font-size: clamp(0.8rem, 3vw, 1.2rem); color: rgba(255,255,255,0.8); margin-bottom: 40px; letter-spacing: 5px; text-shadow: 0 0 10px #ff8c00; }
+/* 标题 */
+.title {
+  font-size: clamp(2.5rem, 10vw, 5rem);
+  color: #fff;
+  text-shadow: 0 0 30px #0ff, 0 0 60px #0ff, 0 0 90px #f0f;
+  margin-bottom: 10px;
+  animation: glow 2s ease-in-out infinite alternate;
+}
 
-.startBtn { background: linear-gradient(135deg, #ff8c00, #ffd700); color: #000; border: none; padding: 18px 60px; font-size: clamp(1rem, 4vw, 1.3rem); font-family: 'Orbitron', sans-serif; font-weight: bold; border-radius: 50px; cursor: pointer; box-shadow: 0 0 30px rgba(255,140,0,0.5); transition: transform 0.2s; }
-.startBtn:hover { transform: scale(1.05); }
+@keyframes glow {
+  from { text-shadow: 0 0 30px #0ff, 0 0 60px #0ff; }
+  to { text-shadow: 0 0 40px #f0f, 0 0 80px #f0f, 0 0 120px #0ff; }
+}
 
-.hint { position: absolute; bottom: 40px; color: rgba(255,255,255,0.6); font-size: 0.8rem; }
+.subtitle {
+  font-size: clamp(0.8rem, 3vw, 1.2rem);
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 30px;
+  letter-spacing: 8px;
+}
 
-.levelSelect { display: flex; gap: 15px; margin-bottom: 30px; }
-.levelBtn { width: 50px; height: 50px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-.levelBtn.selected { border-color: #fff; transform: scale(1.2); box-shadow: 0 0 20px currentColor; }
-.levelBtn[data-level="1"] { background: linear-gradient(#ff69b4,#ff1493); }
-.levelBtn[data-level="2"] { background: linear-gradient(#ff8c00,#ffd700); }
-.levelBtn[data-level="3"] { background: linear-gradient(#32cd32,#228b22); }
-.levelBtn[data-level="4"] { background: linear-gradient(#333,#666); }
+/* 难度选择 */
+.difficulty {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+}
 
-#gameUI { position: absolute; top: 0; left: 0; right: 0; padding: 20px; display: flex; justify-content: space-between; pointer-events: none; z-index: 50; display: none; }
-#gameUI.show { display: flex; }
+.diffBtn {
+  padding: 12px 24px;
+  border-radius: 25px;
+  border: 2px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
 
-.uiBox { background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 12px 24px; border-radius: 30px; color: #fff; font-size: clamp(0.9rem, 3vw, 1.1rem); border: 1px solid rgba(255,140,0,0.3); }
-.uiBox span { color: #ffd700; font-weight: bold; }
+.diffBtn:hover { background: rgba(255,255,255,0.2); }
+.diffBtn.selected {
+  border-color: #0ff;
+  background: rgba(0,255,255,0.2);
+  box-shadow: 0 0 20px rgba(0,255,255,0.5);
+}
+
+.diffBtn.easy { border-color: #4CAF50; }
+.diffBtn.easy.selected { background: rgba(76,175,80,0.3); box-shadow: 0 0 20px rgba(76,175,80,0.5); }
+.diffBtn.medium { border-color: #FF9800; }
+.diffBtn.medium.selected { background: rgba(255,152,0,0.3); box-shadow: 0 0 20px rgba(255,152,0,0.5); }
+.diffBtn.hard { border-color: #f44336; }
+.diffBtn.hard.selected { background: rgba(244,67,54,0.3); box-shadow: 0 0 20px rgba(244,67,54,0.5); }
+
+/* 按钮 */
+.gameBtn {
+  background: linear-gradient(135deg, #0ff 0%, #f0f 50%, #0ff 100%);
+  background-size: 200% 200%;
+  color: #000;
+  border: none;
+  padding: 18px 50px;
+  font-size: clamp(1rem, 4vw, 1.3rem);
+  font-family: 'Orbitron', sans-serif;
+  font-weight: bold;
+  border-radius: 50px;
+  cursor: pointer;
+  animation: gradientShift 3s ease infinite;
+  box-shadow: 0 0 30px rgba(0,255,255,0.5);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.gameBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 50px rgba(0,255,255,0.8);
+}
+
+.gameBtn:active { transform: scale(0.95); }
+
+/* 提示 */
+.hint {
+  position: absolute;
+  bottom: 40px;
+  color: rgba(255,255,255,0.4);
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+}
+
+/* 游戏UI */
+#gameUI {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+#gameUI.show { opacity: 1; }
+
+.uiBox {
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(10px);
+  padding: 12px 24px;
+  border-radius: 30px;
+  color: #fff;
+  font-size: clamp(0.9rem, 3vw, 1.1rem);
+  border: 1px solid rgba(0,255,255,0.3);
+  box-shadow: 0 0 20px rgba(0,255,255,0.2);
+}
+
+.uiBox span { color: #0ff; font-weight: bold; }
+
+/* 关卡显示 */
+.level {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.6);
+  padding: 8px 20px;
+  border-radius: 20px;
+  color: #f0f;
+  font-size: 1rem;
+  border: 1px solid rgba(255,0,255,0.3);
+}
 </style>
 </head>
 <body>
 <div id="game"></div>
-<div class="sun"></div>
-<div class="palm left">🌴</div>
-<div class="palm right">🌴</div>
 
-<div id="startScreen">
+<!-- 开始界面 -->
+<div id="startScreen" class="screen">
   <div class="title">🛹 滑板人生</div>
-  <div class="subtitle">第2关：热带夏日 🌺</div>
-  <div class="levelSelect">
-    <div class="levelBtn" data-level="1" onclick="selectLevel(this, 1)">1</div>
-    <div class="levelBtn selected" data-level="2" onclick="selectLevel(this, 2)">2</div>
-    <div class="levelBtn" data-level="3" onclick="selectLevel(this, 3)">3</div>
-    <div class="levelBtn" data-level="4" onclick="selectLevel(this, 4)">4</div>
+  <div class="subtitle">3D NEON RUNNER</div>
+  
+  <div class="difficulty">
+    <button class="diffBtn easy selected" onclick="setDifficulty('easy')">简单</button>
+    <button class="diffBtn medium" onclick="setDifficulty('medium')">中等</button>
+    <button class="diffBtn hard" onclick="setDifficulty('hard')">困难</button>
   </div>
-  <button class="startBtn" id="startBtn" onclick="startGame()">开始游戏</button>
-  <div class="hint">← → 左右移动 | 触碰障碍物游戏结束</div>
+  
+  <button class="gameBtn" id="startBtn" onclick="startGame()">开始游戏</button>
+  <div class="hint">← → 左右移动 | 躲避红色障碍</div>
 </div>
 
+<!-- 游戏结束界面 -->
+<div id="gameOverScreen" class="screen hidden">
+  <div class="title" id="gameOverTitle">😢 游戏结束</div>
+  <div class="subtitle" id="finalScore">得分: 0</div>
+  <button class="gameBtn" onclick="startGame()">再来一次</button>
+  <button class="gameBtn" onclick="showStart()" style="background:linear-gradient(#666,#444)">返回主页</button>
+</div>
+
+<!-- 游戏UI -->
 <div id="gameUI">
   <div class="uiBox">⭐ <span id="scoreDisplay">0</span></div>
   <div class="uiBox">🏃 <span id="distDisplay">0</span>m</div>
-  <div class="uiBox" style="font-size: 0.8rem;">🌺 热带夏日</div>
 </div>
+
+<div class="level" id="levelDisplay">第 1 关</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-console.log('[1] 热带夏日主题加载中');
-
-var CONFIG = {
-  themes: { 
-    pink: { bg: 0x1a0a15, ground: 0xff69b4, accent: 0xff1493, obstacle: 0xff3366, light: 0xff00ff },
-    tropical: { bg: 0x1a0a30, ground: 0xf4a460, accent: 0xff8c00, obstacle: 0x228b22, light: 0xffd700 },
-    forest: { bg: 0x0a150a, ground: 0x32cd32, accent: 0x228b22, obstacle: 0x8b4513, light: 0x00ff00 },
-    minimal: { bg: 0x111111, ground: 0x333333, accent: 0xffffff, obstacle: 0x666666, light: 0xffffff }
-  },
-  laneWidth: 8, speed: 0.4
+// ==================== 游戏配置 ====================
+const CONFIG = {
+  easy: { speed: 0.25, obstacleCount: 8, spawnDist: 100 },
+  medium: { speed: 0.4, obstacleCount: 12, spawnDist: 80 },
+  hard: { speed: 0.6, obstacleCount: 15, spawnDist: 60 }
 };
 
-var currentLevel = 2;
-var gameRunning = false, score = 0, distance = 0, playerX = 0, targetX = 0;
+// 8关主题
+const LEVELS = [
+  { name: '第 1 关', theme: 'pink', bg: 0x1a0a15, ground: 0xff69b4, accent: 0xff1493 },
+  { name: '第 2 关', theme: 'summer', bg: 0x1a1005, ground: 0xff6347, accent: 0xffd700 },
+  { name: '第 3 关', theme: 'forest', bg: 0x051005, ground: 0x228b22, accent: 0x90ee90 },
+  { name: '第 4 关', theme: 'bw', bg: 0x0a0a0a, ground: 0xffffff, accent: 0x888888 },
+  { name: '第 5 关', theme: 'space', bg: 0x000010, ground: 0x4444ff, accent: 0xff00ff },
+  { name: '第 6 关', theme: 'ice', bg: 0x051520, ground: 0x88ddff, accent: 0x00ffff },
+  { name: '第 7 关', theme: 'desert', bg: 0x1a1000, ground: 0xff8800, accent: 0xff4400 },
+  { name: '第 8 关', theme: 'cyber', bg: 0x0a0015, ground: 0x00ffff, accent: 0xff00ff }
+];
+
+// 游戏状态
+var difficulty = 'easy';
+var currentLevel = 0;
+var gameRunning = false;
+var score = 0;
+var distance = 0;
+var levelScore = 0;
+var playerX = 0;
+var targetX = 0;
 var obstacles = [];
 
+// ==================== Three.js 场景 ====================
 var scene = new THREE.Scene();
-scene.background = new THREE.Color(0x1a0a30);
-scene.fog = new THREE.Fog(0xff8c00, 20, 80);
-
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 100);
 camera.position.set(0, 3.5, 6);
 camera.lookAt(0, 1, -5);
@@ -107,161 +255,242 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 document.getElementById('game').appendChild(renderer.domElement);
 
+// 灯光
 scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-var sunLight = new THREE.PointLight(0xffd700, 1.5, 40);
-sunLight.position.set(5, 10, -10);
-scene.add(sunLight);
-var sunsetLight = new THREE.PointLight(0xff8c00, 0.8, 30);
-sunsetLight.position.set(-5, 5, 5);
-scene.add(sunsetLight);
+var pointLight = new THREE.PointLight(0xff00ff, 1, 30);
+pointLight.position.set(0, 5, 0);
+scene.add(pointLight);
 
-function createPalmTree(x, z) {
-  var palm = new THREE.Group();
-  var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.25, 3, 8), new THREE.MeshStandardMaterial({color: 0x8b4513}));
-  trunk.position.y = 1.5;
-  palm.add(trunk);
-  var leafColors = [0x228b22, 0x32cd32, 0x006400];
-  for(var i = 0; i < 6; i++) {
-    var leaf = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.5), new THREE.MeshStandardMaterial({color: leafColors[i % 3], side: THREE.DoubleSide, transparent: true, opacity: 0.9}));
-    leaf.position.y = 3;
-    leaf.rotation.y = (i / 6) * Math.PI * 2;
-    leaf.rotation.x = -0.5;
-    palm.add(leaf);
-  }
-  palm.position.set(x, 0, z);
-  return palm;
-}
-
-for (var i = 0; i < 8; i++) {
-  scene.add(createPalmTree(-6 - Math.random() * 2, -i * 15));
-  scene.add(createPalmTree(6 + Math.random() * 2, -i * 15));
-}
-
-var ground = new THREE.Mesh(new THREE.PlaneGeometry(30, 200), new THREE.MeshStandardMaterial({color: 0xf4a460, emissive: 0xff8c00, emissiveIntensity: 0.05}));
+// 地面
+var ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(30, 200),
+  new THREE.MeshStandardMaterial({color:0xff69b4,emissive:0xff1493,emissiveIntensity:0.1})
+);
 ground.rotation.x = -Math.PI/2;
 ground.position.z = -80;
 scene.add(ground);
 
-var sandLines = new THREE.GridHelper(200, 40, 0xdeb887, 0xdeb887);
-sandLines.position.y = 0.01;
-sandLines.position.z = -80;
-scene.add(sandLines);
-
-var grid = new THREE.GridHelper(200, 80, 0xffd700, 0x8b4513);
+// 网格
+var grid = new THREE.GridHelper(200, 80, 0x00ffff, 0x222244);
 grid.position.z = -80;
 scene.add(grid);
 
+// 粒子效果
+var particleCount = 300;
+var particleGeo = new THREE.BufferGeometry();
+var particlePositions = new Float32Array(particleCount * 3);
+for(var i=0; i<particleCount*3; i+=3) {
+  particlePositions[i] = (Math.random()-0.5)*20;
+  particlePositions[i+1] = Math.random()*15;
+  particlePositions[i+2] = -Math.random()*100;
+}
+particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+var particles = new THREE.Points(particleGeo, new THREE.PointsMaterial({color:0x00ffff, size:0.08, transparent:true, opacity:0.6}));
+scene.add(particles);
+
+// 玩家
 var player = new THREE.Group();
-var boardMesh = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.08, 2.2), new THREE.MeshStandardMaterial({color: 0x333333, emissive: 0xff8c00, emissiveIntensity: 0.1}));
+
+// 滑板
+var boardMesh = new THREE.Mesh(
+  new THREE.BoxGeometry(1.2, 0.08, 2.2),
+  new THREE.MeshStandardMaterial({color:0x333333})
+);
 boardMesh.position.y = 0.2;
 player.add(boardMesh);
-var bodyMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.5, 16, 1), new THREE.MeshStandardMaterial({color: 0xff8c00, emissive: 0xff8c00, emissiveIntensity: 0.3}));
+
+// 身体
+var bodyMesh = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.25, 0.25, 0.5, 16),
+  new THREE.MeshStandardMaterial({color:0x00ffff,emissive:0x00ffff})
+);
 bodyMesh.position.y = 0.9;
 player.add(bodyMesh);
-var headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 16), new THREE.MeshStandardMaterial({color: 0xffdbac}));
+
+// 头
+var headMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(0.22, 16, 16),
+  new THREE.MeshStandardMaterial({color:0xffdbac})
+);
 headMesh.position.y = 1.55;
 player.add(headMesh);
-var hatMesh = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.15, 16), new THREE.MeshStandardMaterial({color: 0xf4a460}));
-hatMesh.position.y = 1.75;
-player.add(hatMesh);
+
 player.position.y = 0.5;
 scene.add(player);
 
+// ==================== 游戏逻辑 ====================
+function setLevel(n) {
+  currentLevel = Math.min(n, LEVELS.length-1);
+  var level = LEVELS[currentLevel];
+  
+  scene.background = new THREE.Color(level.bg);
+  ground.material.color.setHex(level.ground);
+  ground.material.emissive.setHex(level.accent);
+  pointLight.color.setHex(level.accent);
+  particles.material.color.setHex(level.accent);
+  
+  document.getElementById('levelDisplay').textContent = level.name;
+  
+  // 清理旧障碍物
+  obstacles.forEach(function(o) { scene.remove(o); });
+  obstacles = [];
+}
+
+function setDifficulty(level) {
+  difficulty = level;
+  document.querySelectorAll('.diffBtn').forEach(function(b) { b.classList.remove('selected'); });
+  document.querySelector('.diffBtn.'+level).classList.add('selected');
+}
+
 function spawnObstacle() {
-  var type = Math.random();
-  var obs;
-  if (type < 0.5) {
-    obs = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 1, 8), new THREE.MeshStandardMaterial({color: 0x8b4513}));
-  } else {
-    obs = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 8), new THREE.MeshStandardMaterial({color: 0x228b22}));
-  }
-  obs.position.set((Math.random()-0.5)*CONFIG.laneWidth, 0.5, -80-Math.random()*40);
+  var config = CONFIG[difficulty];
+  var obs = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshStandardMaterial({color:0xff3366})
+  );
+  obs.position.set(
+    (Math.random()-0.5)*8,
+    0.5,
+    -config.spawnDist - Math.random()*30
+  );
   scene.add(obs);
   obstacles.push(obs);
 }
 
-for(var i=0; i<15; i++) spawnObstacle();
-
-function setTheme(t) {
-  var theme = CONFIG.themes[t];
-  if (!theme) return;
-  scene.background = new THREE.Color(theme.bg);
-  ground.material.color.setHex(theme.ground);
-  ground.material.emissive.setHex(theme.accent);
-  ground.material.emissiveIntensity = 0.05;
-  sunLight.color.setHex(theme.light);
-  sunsetLight.color.setHex(theme.accent);
-  obstacles.forEach(function(o) { o.material.color.setHex(theme.obstacle); });
+function startGame() {
+  score = 0;
+  distance = 0;
+  levelScore = 0;
+  playerX = 0;
+  targetX = 0;
+  
+  setLevel(0);
+  
+  // 生成障碍物
+  var config = CONFIG[difficulty];
+  for(var i=0; i<config.obstacleCount; i++) {
+    spawnObstacle();
+  }
+  
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('gameOverScreen').classList.add('hidden');
+  document.getElementById('gameUI').classList.add('show');
+  
+  gameRunning = true;
 }
 
-setTheme('tropical');
-
-window.selectLevel = function(el, level) {
-  document.querySelectorAll('.levelBtn').forEach(function(b) { b.classList.remove('selected'); });
-  el.classList.add('selected');
-  var themes = { 1: 'pink', 2: 'tropical', 3: 'forest', 4: 'minimal' };
-  currentLevel = level;
-  setTheme(themes[level]);
-  var levelNames = { 1: '粉色浪漫', 2: '热带夏日', 3: '森林氧吧', 4: '极简黑白' };
-  document.querySelector('.subtitle').textContent = '第' + level + '关：' + levelNames[level] + ' 🌺';
-  document.querySelector('#gameUI .uiBox:last-child').textContent = levelNames[level];
-};
-
-document.addEventListener('touchmove', function(e) { if(gameRunning) { e.preventDefault(); targetX = (e.touches[0].clientX/window.innerWidth-0.5)*CONFIG.laneWidth; } }, {passive:false});
-document.addEventListener('touchend', function() { targetX = 0; });
-document.addEventListener('mousemove', function(e) { if(gameRunning) targetX = (e.clientX/window.innerWidth-0.5)*CONFIG.laneWidth; });
-document.addEventListener('mouseup', function() { if(gameRunning) targetX = 0; });
-
-window.startGame = function() {
-  gameRunning = true;
-  score = 0; distance = 0; playerX = 0; targetX = 0;
-  obstacles.forEach(function(o) { o.position.z = -50-Math.random()*30; o.position.x = (Math.random()-0.5)*CONFIG.laneWidth; });
-  document.getElementById('startScreen').style.display = 'none';
-  document.getElementById('gameUI').style.display = 'flex';
-};
+function showStart() {
+  document.getElementById('gameOverScreen').classList.add('hidden');
+  document.getElementById('startScreen').classList.remove('hidden');
+}
 
 function gameOver() {
   gameRunning = false;
-  document.getElementById('startScreen').style.display = 'flex';
-  document.getElementById('gameUI').style.display = 'none';
+  document.getElementById('gameUI').classList.remove('show');
+  document.getElementById('gameOverScreen').classList.remove('hidden');
+  document.getElementById('finalScore').textContent = '得分: ' + score + ' | 距离: ' + Math.floor(distance) + 'm';
 }
 
 function checkCollision() {
+  var config = CONFIG[difficulty];
+  var playerBox = {x: player.position.x, y: player.position.y, z: 0, w: 0.8, h: 1.5, d: 1};
+  
   for(var k=0; k<obstacles.length; k++) {
     var obs = obstacles[k];
     var dx = Math.abs(obs.position.x - player.position.x);
     var dy = Math.abs(obs.position.y - player.position.y);
-    var dz = Math.abs(obs.position.z - player.position.z);
-    if(dx < 0.8 && dy < 1.2 && dz < 0.8) return true;
+    var dz = Math.abs(obs.position.z);
+    
+    // 放宽碰撞检测
+    if(dx < 1.2 && dy < 1.5 && dz < 1.5) return true;
   }
   return false;
 }
 
+// ==================== 输入控制 ====================
+document.addEventListener('touchmove', function(e) {
+  if(gameRunning) {
+    e.preventDefault();
+    targetX = (e.touches[0].clientX/window.innerWidth-0.5)*8;
+  }
+}, {passive:false});
+document.addEventListener('touchend', function() { targetX = 0; });
+document.addEventListener('mousemove', function(e) {
+  if(gameRunning) targetX = (e.clientX/window.innerWidth-0.5)*8;
+});
+document.addEventListener('mouseup', function() { if(gameRunning) targetX = 0; });
+
+// ==================== 游戏循环 ====================
 function gameLoop() {
   if(gameRunning) {
+    var config = CONFIG[difficulty];
+    
+    // 玩家移动
     playerX += (targetX - playerX) * 0.1;
     player.position.x = playerX;
     player.rotation.z = (targetX - playerX) * 0.15;
     player.position.y = 0.5 + Math.sin(Date.now()*0.008)*0.08;
-    obstacles.forEach(function(o) { o.position.z += CONFIG.speed; if(o.position.z > 10) { o.position.z = -50-Math.random()*30; o.position.x = (Math.random()-0.5)*CONFIG.laneWidth; } });
-    if(Math.random() < 0.015) spawnObstacle();
-    if(checkCollision()) gameOver();
-    distance += CONFIG.speed;
+    
+    // 障碍物移动
+    obstacles.forEach(function(o) {
+      o.position.z += config.speed;
+    });
+    
+    // 重置障碍物
+    obstacles.forEach(function(o) {
+      if(o.position.z > 10) {
+        o.position.z = -config.spawnDist - Math.random()*30;
+        o.position.x = (Math.random()-0.5)*8;
+      }
+    });
+    
+    // 随机生成
+    if(Math.random() < 0.01) spawnObstacle();
+    
+    // 碰撞检测
+    if(checkCollision()) {
+      gameOver();
+    }
+    
+    // 分数
+    distance += config.speed;
     score = Math.floor(distance);
+    levelScore = Math.floor(distance);
+    
+    // 通关检查 (每500分升一级)
+    if(levelScore > 500 && currentLevel < LEVELS.length-1) {
+      currentLevel++;
+      setLevel(currentLevel);
+      levelScore = 0;
+    }
+    
     document.getElementById('scoreDisplay').textContent = score;
     document.getElementById('distDisplay').textContent = Math.floor(distance);
+    
+    // 粒子移动
+    var positions = particles.geometry.attributes.position.array;
+    for(var i=0; i<positions.length; i+=3) {
+      positions[i+2] += config.speed * 0.3;
+      if(positions[i+2] > 10) positions[i+2] = -100;
+    }
+    particles.geometry.attributes.position.needsUpdate = true;
   }
+  
   renderer.render(scene, camera);
   requestAnimationFrame(gameLoop);
 }
 
-gameLoop();
-
+// ==================== 初始化 ====================
 window.addEventListener('resize', function() {
   camera.aspect = window.innerWidth/window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+setLevel(0);
+gameLoop();
+
+console.log('滑板人生 3D - 初始化完成');
 </script>
 </body>
 </html>

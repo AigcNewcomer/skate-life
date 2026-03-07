@@ -2,84 +2,122 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>滑板人生 - 3D跑酷版</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>滑板人生 - 3D跑酷</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; touch-action: none; }
-    body { font-family: 'Noto Sans SC', sans-serif; background: #0a0a0f; }
-    #gameContainer { width: 100%; height: 100%; position: relative; }
-    canvas { display: block; width: 100%; height: 100%; }
+    * { margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #000; color: #fff; overflow: hidden; }
+    #container { width: 100vw; height: 100vh; position: relative; }
+    canvas { display: block; }
     
-    .screen {
+    /* 开始界面 */
+    #startScreen {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      z-index: 20;
-      background: linear-gradient(180deg, rgba(10,10,20,0.95) 0%, rgba(20,20,40,0.98) 100%);
-      padding: 20px;
+      background: linear-gradient(180deg, #1a0a20 0%, #0a0a1a 100%);
+      z-index: 100;
     }
-    .screen.hidden { display: none; }
-    .title { font-size: 2.5rem; color: #fff; margin-bottom: 20px; text-shadow: 0 0 30px rgba(0,212,255,0.5); }
-    .btn { background: linear-gradient(135deg, #00d4ff, #7b2ff7); color: #fff; border: none; padding: 15px 50px; font-size: 1.2rem; border-radius: 30px; cursor: pointer; margin: 10px; }
-    #ui { position: absolute; top: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; pointer-events: none; z-index: 10; }
-    .ui-box { background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 20px; color: #fff; font-weight: bold; }
-    .controls-hint { position: absolute; bottom: 30px; color: rgba(255,255,255,0.5); }
+    #startScreen.hidden { display: none; }
+    
+    h1 { font-size: 2rem; margin-bottom: 10px; color: #0ff; }
+    p { color: #888; margin-bottom: 30px; }
+    
+    .btn {
+      background: linear-gradient(135deg, #0ff, #f0f);
+      color: #fff;
+      border: none;
+      padding: 15px 60px;
+      font-size: 1.2rem;
+      border-radius: 30px;
+      cursor: pointer;
+      margin: 10px;
+    }
+    
+    /* 游戏UI */
+    #gameUI {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      display: none;
+      z-index: 50;
+    }
+    #gameUI.show { display: flex; }
+    .score { background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 20px; }
+    
+    /* 调试信息 */
+    #debug { position: absolute; bottom: 10px; left: 10px; color: #0f0; font-size: 12px; z-index: 200; }
   </style>
 </head>
 <body>
-  <div id="gameContainer">
-    <div id="startScreen" class="screen">
-      <div class="title">🛹 滑板人生</div>
-      <div style="color:#aaa;margin-bottom:15px;">3D跑酷版</div>
-      <button class="btn" id="startBtn">开始游戏</button>
-      <div class="controls-hint">左右滑动控制 | 躲避障碍</div>
+  <div id="container">
+    <!-- 开始界面 -->
+    <div id="startScreen">
+      <h1>🛹 滑板人生</h1>
+      <p>3D跑酷游戏</p>
+      <button class="btn" onclick="console.log('按钮点击'); startGame();">开始游戏</button>
+      <p style="margin-top:20px;font-size:12px;">← → 左右移动</p>
     </div>
-    <div id="gameOverScreen" class="screen hidden">
-      <div class="title" id="gameOverTitle">😢 游戏结束</div>
-      <div class="ui-box" id="finalScore" style="margin-bottom:20px;">得分: 0</div>
-      <button class="btn" id="retryBtn">再玩一次</button>
-      <button class="btn" id="homeBtn" style="background:#666;">返回主页</button>
+    
+    <!-- 游戏UI -->
+    <div id="gameUI">
+      <div class="score">⭐ <span id="scoreVal">0</span></div>
+      <div class="score">🏃 <span id="distVal">0</span>m</div>
     </div>
-    <div id="ui" class="hidden">
-      <div class="ui-box">⭐ <span id="score">0</span></div>
-      <div class="ui-box">🏃 <span id="distance">0</span>m</div>
-    </div>
+    
+    <!-- 调试 -->
+    <div id="debug"></div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
-    console.log('脚本加载开始');
+    // 调试输出
+    const debug = document.getElementById('debug');
+    function log(msg) {
+      debug.innerHTML += msg + '<br>';
+      console.log(msg);
+    }
+    
+    log('脚本开始加载');
+    
+    // 检查 Three.js
+    if (typeof THREE === 'undefined') {
+      log('ERROR: Three.js 未加载!');
+    } else {
+      log('Three.js 已加载: ' + THREE.REVISION);
+    }
     
     // 场景
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0a0a1a);
-    scene.fog = new THREE.Fog(0x0a0a1a, 10, 50);
+    scene.fog = new THREE.Fog(0x0a0a1a, 10, 40);
     
     // 相机
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 100);
     camera.position.set(0, 3, 6);
     camera.lookAt(0, 0, -5);
     
     // 渲染器
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    document.getElementById('gameContainer').appendChild(renderer.domElement);
+    document.getElementById('container').appendChild(renderer.domElement);
+    log('渲染器已创建');
     
     // 灯光
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    const dirLight = new THREE.DirectionalLight(0x00d4ff, 0.8);
-    dirLight.position.set(5, 10, 5);
-    scene.add(dirLight);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const light = new THREE.DirectionalLight(0x00ffff, 0.8);
+    light.position.set(5, 10, 5);
+    scene.add(light);
     
     // 地面
     const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(30, 200),
-      new THREE.MeshStandardMaterial({ color: 0x00ffff, roughness: 0.8 })
+      new THREE.PlaneGeometry(20, 200),
+      new THREE.MeshStandardMaterial({ color: 0x00ffff })
     );
     ground.rotation.x = -Math.PI/2;
     ground.position.z = -80;
@@ -88,162 +126,152 @@
     // 玩家
     const player = new THREE.Group();
     
-    // 滑板
     const board = new THREE.Mesh(
-      new THREE.BoxGeometry(1, 0.1, 2),
+      new THREE.BoxGeometry(0.8, 0.1, 1.5),
       new THREE.MeshStandardMaterial({ color: 0x8b4513 })
     );
     board.position.y = 0.2;
     player.add(board);
     
-    // 身体
     const body = new THREE.Mesh(
-      new THREE.CapsuleGeometry(0.3, 0.6, 4, 8),
-      new THREE.MeshStandardMaterial({ color: 0x00d4ff, emissive: 0x004466 })
+      new THREE.CapsuleGeometry(0.25, 0.5, 4, 8),
+      new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x004444 })
     );
-    body.position.y = 1;
+    body.position.y = 0.9;
     player.add(body);
     
-    // 头
     const head = new THREE.Mesh(
-      new THREE.SphereGeometry(0.3, 16, 16),
+      new THREE.SphereGeometry(0.2, 8, 8),
       new THREE.MeshStandardMaterial({ color: 0xffdbac })
     );
-    head.position.y = 1.7;
+    head.position.y = 1.5;
     player.add(head);
     
     player.position.y = 0.5;
     scene.add(player);
+    log('玩家已创建');
     
     // 障碍物
     let obstacles = [];
     
-    function createObstacle() {
+    function spawnObstacle() {
       const obs = new THREE.Mesh(
-        new THREE.BoxGeometry(1, 1.5, 1),
+        new THREE.BoxGeometry(0.8, 1, 0.8),
         new THREE.MeshStandardMaterial({ color: 0xff4444 })
       );
-      obs.position.y = 0.75;
-      return obs;
-    }
-    
-    function spawnObstacle() {
-      const obs = createObstacle();
-      obs.position.x = (Math.random() - 0.5) * 8;
-      obs.position.z = -60 - Math.random() * 20;
+      obs.position.set((Math.random() - 0.5) * 6, 0.5, -50 - Math.random() * 30);
       scene.add(obs);
       obstacles.push(obs);
     }
     
-    // 初始障碍物
-    for(let i = 0; i < 10; i++) spawnObstacle();
+    for (let i = 0; i < 15; i++) spawnObstacle();
+    log('障碍物已创建: ' + obstacles.length);
     
     // 游戏状态
-    let gameRunning = false;
+    let running = false;
     let score = 0;
     let distance = 0;
-    let playerX = 0;
+    let px = 0;
     let targetX = 0;
     
-    // 输入控制
-    let touchStartX = 0;
+    // 输入
+    let touching = false;
+    let startX = 0;
     
     document.addEventListener('touchstart', e => {
-      touchStartX = e.touches[0].clientX;
+      touching = true;
+      startX = e.touches[0].clientX;
     });
     
     document.addEventListener('touchmove', e => {
-      if (!gameRunning) return;
+      if (!running) return;
       e.preventDefault();
-      const diff = (e.touches[0].clientX - touchStartX) * 0.03;
-      targetX = Math.max(-4, Math.min(4, diff));
-      touchStartX = e.touches[0].clientX;
+      const dx = (e.touches[0].clientX - startX) * 0.02;
+      targetX = Math.max(-3, Math.min(3, dx));
+      startX = e.touches[0].clientX;
     });
     
     document.addEventListener('touchend', () => {
+      touching = false;
       targetX = 0;
     });
     
     document.addEventListener('mousemove', e => {
-      if (!gameRunning) return;
-      targetX = (e.clientX / window.innerWidth - 0.5) * 8;
+      if (!running) return;
+      targetX = (e.clientX / window.innerWidth - 0.5) * 6;
     });
     
-    // 按钮事件
-    document.getElementById('startBtn').addEventListener('click', startGame);
-    document.getElementById('retryBtn').addEventListener('click', startGame);
-    document.getElementById('homeBtn').addEventListener('click', () => {
-      document.getElementById('gameOverScreen').classList.add('hidden');
-      document.getElementById('startScreen').classList.remove('hidden');
-    });
-    
+    // 开始游戏
     function startGame() {
-      console.log('开始游戏');
+      log('startGame() 被调用');
       
-      // 清理
+      // 重置
       obstacles.forEach(o => scene.remove(o));
       obstacles = [];
-      for(let i = 0; i < 10; i++) spawnObstacle();
+      for (let i = 0; i < 15; i++) spawnObstacle();
       
       score = 0;
       distance = 0;
-      playerX = 0;
+      px = 0;
       targetX = 0;
       
       document.getElementById('startScreen').classList.add('hidden');
-      document.getElementById('gameOverScreen').classList.add('hidden');
-      document.getElementById('ui').classList.remove('hidden');
+      document.getElementById('gameUI').classList.add('show');
       
-      gameRunning = true;
+      running = true;
+      log('游戏已开始');
     }
     
-    function gameOver() {
-      console.log('游戏结束');
-      gameRunning = false;
-      document.getElementById('ui').classList.add('hidden');
-      document.getElementById('gameOverScreen').classList.remove('hidden');
-      document.getElementById('finalScore').textContent = '得分: ' + score + ' | 距离: ' + Math.floor(distance) + 'm';
+    // 碰撞检测
+    function checkCollision() {
+      for (let obs of obstacles) {
+        const dz = Math.abs(obs.position.z);
+        const dx = Math.abs(obs.position.x - px);
+        if (dx < 0.8 && dz < 0.8) {
+          return true;
+        }
+      }
+      return false;
     }
     
     // 游戏循环
     function animate() {
       requestAnimationFrame(animate);
       
-      if (gameRunning) {
-        // 玩家移动
-        playerX += (targetX - playerX) * 0.1;
-        player.position.x = playerX;
-        player.rotation.z = (targetX - playerX) * 0.1;
-        player.position.y = 0.5 + Math.sin(Date.now() * 0.01) * 0.1;
+      if (running) {
+        // 移动
+        px += (targetX - px) * 0.1;
+        player.position.x = px;
+        player.rotation.z = (targetX - px) * 0.15;
         
-        // 移动障碍物
-        obstacles.forEach(obs => {
-          obs.position.z += 0.3;
-        });
+        // 障碍物移动
+        obstacles.forEach(o => o.position.z += 0.25);
         
-        // 移除并重新生成
-        obstacles = obstacles.filter(obs => {
-          if (obs.position.z > 10) {
-            scene.remove(obs);
+        // 移除超出的障碍物
+        obstacles = obstacles.filter(o => {
+          if (o.position.z > 10) {
+            scene.remove(o);
             return false;
           }
           return true;
         });
         
+        // 生成新障碍物
         if (Math.random() < 0.02) spawnObstacle();
         
-        // 碰撞检测
-        obstacles.forEach(obs => {
-          const dx = Math.abs(obs.position.x - playerX);
-          const dz = Math.abs(obs.position.z);
-          if (dx < 1 && dz < 1) gameOver();
-        });
+        // 碰撞
+        if (checkCollision()) {
+          log('游戏结束! 得分: ' + score);
+          running = false;
+          document.getElementById('startScreen').classList.remove('hidden');
+          document.getElementById('gameUI').classList.remove('show');
+        }
         
         // 分数
-        distance += 0.3;
+        distance += 0.25;
         score = Math.floor(distance);
-        document.getElementById('score').textContent = score;
-        document.getElementById('distance').textContent = Math.floor(distance);
+        document.getElementById('scoreVal').textContent = score;
+        document.getElementById('distVal').textContent = Math.floor(distance);
       }
       
       renderer.render(scene, camera);
@@ -256,7 +284,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
     
-    console.log('初始化完成');
+    log('初始化完成，开始动画');
     animate();
   </script>
 </body>

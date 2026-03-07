@@ -148,7 +148,7 @@ function spawnObstacle() {
     new THREE.BoxGeometry(1, 1, 1),
     new THREE.MeshStandardMaterial({color:0xff3366})
   );
-  obs.position.set((Math.random()-0.5)*CONFIG.laneWidth, 0.5, -50-Math.random()*30);
+  obs.position.set((Math.random()-0.5)*CONFIG.laneWidth, 0.5, -80-Math.random()*40);
   scene.add(obs);
   obstacles.push(obs);
 }

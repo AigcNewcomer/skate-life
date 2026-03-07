@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>滑板人生 3D - 精致版</title>
+<title>滑板人生 3D - 优化版</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
 
@@ -18,7 +18,6 @@ html, body {
 
 #game { width: 100%; height: 100%; }
 
-/* 界面 */
 .screen {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -34,28 +33,21 @@ html, body {
 
 #startScreen { 
   background: linear-gradient(180deg, #0d0015 0%, #1a0a2e 50%, #0d0015 100%);
-  animation: bgPulse 4s ease-in-out infinite;
-}
-
-@keyframes bgPulse {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
 }
 
 #gameOverScreen { background: rgba(0,0,0,0.92); }
 
-/* 标题 */
 .title {
   font-size: clamp(2.2rem, 9vw, 4.5rem);
   color: #fff;
-  text-shadow: 0 0 20px #0ff, 0 0 40px #0ff, 0 0 60px #f0f, 0 0 80px #f0f;
+  text-shadow: 0 0 20px #0ff, 0 0 40px #0ff, 0 0 60px #f0f;
   margin-bottom: 8px;
   animation: titleGlow 2s ease-in-out infinite alternate;
 }
 
 @keyframes titleGlow {
-  from { text-shadow: 0 0 20px #0ff, 0 0 40px #0ff, 0 0 60px #f0f; }
-  to { text-shadow: 0 0 30px #f0f, 0 0 50px #f0f, 0 0 70px #0ff, 0 0 90px #0ff; }
+  from { text-shadow: 0 0 20px #0ff, 0 0 40px #0ff; }
+  to { text-shadow: 0 0 30px #f0f, 0 0 50px #f0f, 0 0 70px #0ff; }
 }
 
 .subtitle {
@@ -65,61 +57,25 @@ html, body {
   letter-spacing: 6px;
 }
 
-/* 模式选择 */
-.modeSelect {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 25px;
-}
+.modeSelect { display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px; }
 
 .modeBtn {
   padding: 16px 40px;
   border-radius: 12px;
   border: 2px solid rgba(0,255,255,0.4);
-  background: linear-gradient(135deg, rgba(0,255,255,0.1) 0%, rgba(255,0,255,0.1) 100%);
+  background: linear-gradient(135deg, rgba(0,255,255,0.1), rgba(255,0,255,0.1));
   color: #fff;
   font-family: 'Orbitron', sans-serif;
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s;
-  position: relative;
-  overflow: hidden;
 }
 
-.modeBtn::before {
-  content: '';
-  position: absolute;
-  top: 0; left: -100%;
-  width: 100%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  transition: left 0.5s;
-}
+.modeBtn:hover { border-color: #0ff; box-shadow: 0 0 25px rgba(0,255,255,0.4); transform: scale(1.02); }
+.modeBtn.selected { border-color: #0ff; background: linear-gradient(135deg, rgba(0,255,255,0.2), rgba(255,0,255,0.2)); box-shadow: 0 0 30px rgba(0,255,255,0.5); }
+.modeBtn.locked { opacity: 0.5; border-color: rgba(255,255,255,0.2); }
+.modeBtn.locked::after { content: ' 🔒'; }
 
-.modeBtn:hover::before { left: 100%; }
-
-.modeBtn:hover { 
-  border-color: #0ff; 
-  box-shadow: 0 0 25px rgba(0,255,255,0.4), inset 0 0 20px rgba(0,255,255,0.1);
-  transform: scale(1.02);
-}
-
-.modeBtn.selected { 
-  border-color: #0ff; 
-  background: linear-gradient(135deg, rgba(0,255,255,0.2) 0%, rgba(255,0,255,0.2) 100%);
-  box-shadow: 0 0 30px rgba(0,255,255,0.5);
-}
-
-.modeBtn.locked { 
-  opacity: 0.5; 
-  border-color: rgba(255,255,255,0.2);
-}
-
-.modeBtn.locked::after {
-  content: ' 🔒';
-}
-
-/* 难度选择 */
 .difficulty { display: flex; gap: 10px; margin-bottom: 25px; }
 
 .diffBtn {
@@ -135,17 +91,11 @@ html, body {
 }
 
 .diffBtn:hover { background: rgba(255,255,255,0.15); }
-
-.diffBtn.selected { 
-  border-color: #0ff; 
-  box-shadow: 0 0 15px rgba(0,255,255,0.4); 
-}
-
+.diffBtn.selected { border-color: #0ff; box-shadow: 0 0 15px rgba(0,255,255,0.4); }
 .diffBtn.easy.selected { border-color: #4CAF50; box-shadow: 0 0 15px rgba(76,175,80,0.5); }
 .diffBtn.medium.selected { border-color: #FF9800; box-shadow: 0 0 15px rgba(255,152,0,0.5); }
 .diffBtn.hard.selected { border-color: #f44336; box-shadow: 0 0 15px rgba(244,67,54,0.5); }
 
-/* 按钮 */
 .gameBtn {
   background: linear-gradient(135deg, #0ff 0%, #f0f 50%, #0ff 100%);
   background-size: 200% 200%;
@@ -162,24 +112,12 @@ html, body {
   transition: transform 0.2s;
 }
 
-@keyframes gradientShift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
+@keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 .gameBtn:hover { transform: scale(1.05); box-shadow: 0 0 35px rgba(0,255,255,0.6); }
 
-.stats {
-  margin-top: 20px;
-  color: rgba(255,255,255,0.4);
-  font-size: 0.85rem;
-  display: flex;
-  gap: 20px;
-}
-
+.stats { margin-top: 20px; color: rgba(255,255,255,0.4); font-size: 0.85rem; display: flex; gap: 20px; }
 .stats span { color: #0ff; }
 
-/* 游戏UI */
 #gameUI {
   position: absolute;
   top: 0; left: 0; right: 0;
@@ -238,12 +176,28 @@ html, body {
   border-radius: 3px;
   transition: width 0.3s;
 }
+
+/* 音效控制 */
+.soundToggle {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(0,255,255,0.3);
+  border-radius: 20px;
+  padding: 8px 12px;
+  color: #0ff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  z-index: 60;
+}
 </style>
 </head>
 <body>
 <div id="game"></div>
 
-<!-- 开始界面 -->
+<button class="soundToggle" onclick="toggleSound()">🔊</button>
+
 <div id="startScreen" class="screen">
   <div class="title">🛹 滑板人生</div>
   <div class="subtitle">3D NEON RUNNER</div>
@@ -266,7 +220,6 @@ html, body {
   </div>
 </div>
 
-<!-- 游戏结束 -->
 <div id="gameOverScreen" class="screen hidden">
   <div class="title" id="gameOverTitle">😵 游戏结束</div>
   <div class="subtitle" id="finalStats"></div>
@@ -274,7 +227,6 @@ html, body {
   <button class="gameBtn" onclick="showStart()" style="background:linear-gradient(135deg,#444,#222);margin-top:10px">返回主页</button>
 </div>
 
-<!-- 游戏UI -->
 <div id="gameUI">
   <div class="uiBox">⭐ <span id="scoreDisplay">0</span></div>
   <div class="uiBox">💎 <span id="coinDisplay">0</span></div>
@@ -300,17 +252,54 @@ const PATTERNS = {
 };
 
 const LEVELS = [
-  { name: '第 1 关', bg: 0x1a0a15, ground: 0xff69b4, accent: 0xff1493, particles: 'hearts' },
-  { name: '第 2 关', bg: 0x1a1005, ground: 0xff6347, accent: 0xffd700, particles: 'sparks' },
-  { name: '第 3 关', bg: 0x051005, ground: 0x228b22, accent: 0x90ee90, particles: 'leaves' },
-  { name: '第 4 关', bg: 0x0a0a0a, ground: 0x444444, accent: 0x888888, particles: 'cubes' },
-  { name: '第 5 关', bg: 0x000010, ground: 0x4444ff, accent: 0xff00ff, particles: 'stars' },
-  { name: '第 6 关', bg: 0x051520, ground: 0x88ddff, accent: 0x00ffff, particles: 'snow' },
-  { name: '第 7 关', bg: 0x1a1000, ground: 0xff8800, accent: 0xff4400, particles: 'sand' },
-  { name: '第 8 关', bg: 0x0a0015, ground: 0x00ffff, accent: 0xff00ff, particles: 'data' }
+  { name: '第 1 关', bg: 0x1a0a15, ground: 0xff69b4, accent: 0xff1493, fog: 0x1a0a15 },
+  { name: '第 2 关', bg: 0x1a1005, ground: 0xff6347, accent: 0xffd700, fog: 0x1a1005 },
+  { name: '第 3 关', bg: 0x051005, ground: 0x228b22, accent: 0x90ee90, fog: 0x051005 },
+  { name: '第 4 关', bg: 0x0a0a0a, ground: 0x444444, accent: 0x888888, fog: 0x0a0a0a },
+  { name: '第 5 关', bg: 0x000010, ground: 0x4444ff, accent: 0xff00ff, fog: 0x000010 },
+  { name: '第 6 关', bg: 0x051520, ground: 0x88ddff, accent: 0x00ffff, fog: 0x051520 },
+  { name: '第 7 关', bg: 0x1a1000, ground: 0xff8800, accent: 0xff4400, fog: 0x1a1000 },
+  { name: '第 8 关', bg: 0x0a0015, ground: 0x00ffff, accent: 0xff00ff, fog: 0x0a0015 }
 ];
 
 const CONFIG = { easy: { speed: 0.25 }, medium: { speed: 0.4 }, hard: { speed: 0.6 } };
+
+// 音效系统
+var soundEnabled = true;
+var audioCtx = null;
+
+function initAudio() {
+  if(!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
+
+function playTone(freq, duration, type = 'sine', volume = 0.1) {
+  if(!soundEnabled || !audioCtx) return;
+  try {
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch(e) {}
+}
+
+function playCoinSound() { playTone(880, 0.1, 'sine', 0.15); playTone(1100, 0.1, 'sine', 0.1); }
+function playCollisionSound() { playTone(150, 0.3, 'sawtooth', 0.2); playTone(100, 0.3, 'sawtooth', 0.15); }
+function playLevelUpSound() { playTone(523, 0.15, 'sine', 0.15); playTone(659, 0.15, 'sine', 0.15); playTone(784, 0.2, 'sine', 0.15); }
+function playClickSound() { playTone(440, 0.05, 'sine', 0.1); }
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  document.querySelector('.soundToggle').textContent = soundEnabled ? '🔊' : '🔇';
+  if(soundEnabled) initAudio();
+}
 
 // 游戏状态
 var gameMode = 'story';
@@ -323,14 +312,18 @@ var playerLane = 1, targetLane = 1;
 var obstacles = [], coinsArr = [];
 var highScore = parseInt(localStorage.getItem('skatelife_highscore') || '0');
 var maxLevel = parseInt(localStorage.getItem('skatelife_level') || '0');
+var lastLevelScore = 0;
 
-// Three.js
 var scene, camera, renderer;
-var player, ground, grid, particleSystem;
+var player, ground, grid, particleSystem, coinParticles;
 var clock = new THREE.Clock();
 
 function init() {
+  initAudio();
+  
   scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x1a0a15, 10, 80);
+  
   camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 200);
   camera.position.set(0, 4, 7);
   camera.lookAt(0, 1, -5);
@@ -341,8 +334,7 @@ function init() {
   renderer.shadowMap.enabled = true;
   document.getElementById('game').appendChild(renderer.domElement);
 
-  // 灯光
-  var ambient = new THREE.AmbientLight(0xffffff, 0.4);
+  var ambient = new THREE.AmbientLight(0xffffff, 0.5);
   scene.add(ambient);
   
   var dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -350,17 +342,16 @@ function init() {
   dirLight.castShadow = true;
   scene.add(dirLight);
 
-  // 霓虹点光
-  var neonLight1 = new THREE.PointLight(0x00ffff, 1, 30);
-  neonLight1.position.set(-3, 3, 0);
+  var neonLight1 = new THREE.PointLight(0x00ffff, 1.5, 40);
+  neonLight1.position.set(-5, 5, 0);
   scene.add(neonLight1);
   
-  var neonLight2 = new THREE.PointLight(0xff00ff, 1, 30);
-  neonLight2.position.set(3, 3, 0);
+  var neonLight2 = new THREE.PointLight(0xff00ff, 1.5, 40);
+  neonLight2.position.set(5, 5, 0);
   scene.add(neonLight2);
 
   ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(30, 200),
+    new THREE.PlaneGeometry(40, 200),
     new THREE.MeshStandardMaterial({color: 0xff69b4, metalness: 0.3, roughness: 0.7})
   );
   ground.rotation.x = -Math.PI/2;
@@ -368,22 +359,23 @@ function init() {
   ground.receiveShadow = true;
   scene.add(ground);
 
-  // 轨道线
-  grid = new THREE.GridHelper(200, 60, 0x00ffff, 0x222244);
+  grid = new THREE.GridHelper(200, 80, 0x00ffff, 0x222244);
   grid.position.z = -80;
   scene.add(grid);
 
-  // 创建精致玩家
   player = createPlayer();
   player.position.y = 0;
   scene.add(player);
 
-  // 粒子
   createParticleSystem();
+  createCoinParticles();
 
-  // 更新UI
   document.getElementById('highScoreDisplay').textContent = highScore;
   document.getElementById('levelProgressDisplay').textContent = maxLevel;
+  
+  if(maxLevel >= 7) {
+    document.getElementById('modeEndless').classList.remove('locked');
+  }
   
   setLevel(0);
 }
@@ -392,80 +384,81 @@ function createPlayer() {
   var p = new THREE.Group();
   
   // 滑板
-  var boardGeo = new THREE.BoxGeometry(1.3, 0.08, 2.4);
-  var boardMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.2 });
-  var board = new THREE.Mesh(boardGeo, boardMat);
+  var board = new THREE.Mesh(
+    new THREE.BoxGeometry(1.3, 0.08, 2.4),
+    new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.2 })
+  );
   board.position.y = 0.15;
   board.castShadow = true;
   p.add(board);
   
-  // 滑板发光边缘
-  var edgeGeo = new THREE.BoxGeometry(1.35, 0.02, 2.45);
-  var edgeMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
-  var edge = new THREE.Mesh(edgeGeo, edgeMat);
+  var edge = new THREE.Mesh(
+    new THREE.BoxGeometry(1.35, 0.02, 2.45),
+    new THREE.MeshBasicMaterial({ color: 0x00ffff })
+  );
   edge.position.y = 0.19;
   p.add(edge);
   
   // 身体
-  var bodyGeo = new THREE.CylinderGeometry(0.22, 0.28, 0.7, 8);
-  var bodyMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, metalness: 0.5, roughness: 0.5 });
-  var body = new THREE.Mesh(bodyGeo, bodyMat);
+  var body = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.22, 0.28, 0.7, 8),
+    new THREE.MeshStandardMaterial({ color: 0x1a1a2e, metalness: 0.5, roughness: 0.5 })
+  );
   body.position.y = 0.75;
   body.castShadow = true;
   p.add(body);
   
   // 头部
-  var headGeo = new THREE.SphereGeometry(0.22, 16, 16);
-  var headMat = new THREE.MeshStandardMaterial({ color: 0xffdbac });
-  var head = new THREE.Mesh(headGeo, headMat);
+  var head = new THREE.Mesh(
+    new THREE.SphereGeometry(0.22, 16, 16),
+    new THREE.MeshStandardMaterial({ color: 0xffdbac })
+  );
   head.position.y = 1.35;
   head.castShadow = true;
   p.add(head);
   
   // 墨镜
-  var glassesGeo = new THREE.BoxGeometry(0.35, 0.08, 0.1);
-  var glassesMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.1 });
-  var glasses = new THREE.Mesh(glassesGeo, glassesMat);
+  var glasses = new THREE.Mesh(
+    new THREE.BoxGeometry(0.35, 0.08, 0.1),
+    new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.1 })
+  );
   glasses.position.set(0, 1.38, 0.18);
   p.add(glasses);
   
-  // 护目镜发光
-  var glowGeo = new THREE.BoxGeometry(0.37, 0.02, 0.02);
-  var glowMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
-  var glow = new THREE.Mesh(glowGeo, glowMat);
+  var glow = new THREE.Mesh(
+    new THREE.BoxGeometry(0.37, 0.02, 0.02),
+    new THREE.MeshBasicMaterial({ color: 0x00ffff })
+  );
   glow.position.set(0, 1.36, 0.24);
   p.add(glow);
   
   // 头发
-  var hairGeo = new THREE.SphereGeometry(0.24, 8, 8, 0, Math.PI * 2, 0, Math.PI/2);
-  var hairMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a });
-  var hair = new THREE.Mesh(hairGeo, hairMat);
+  var hair = new THREE.Mesh(
+    new THREE.SphereGeometry(0.24, 8, 8, 0, Math.PI * 2, 0, Math.PI/2),
+    new THREE.MeshStandardMaterial({ color: 0x2a2a2a })
+  );
   hair.position.y = 1.48;
   p.add(hair);
   
-  // 双手
-  var armGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.4, 6);
+  // 手臂
   var armMat = new THREE.MeshStandardMaterial({ color: 0xffdbac });
-  
-  var leftArm = new THREE.Mesh(armGeo, armMat);
+  var leftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.4, 6), armMat);
   leftArm.position.set(-0.4, 0.85, 0);
   leftArm.rotation.z = 0.3;
   p.add(leftArm);
   
-  var rightArm = new THREE.Mesh(armGeo, armMat);
+  var rightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.4, 6), armMat);
   rightArm.position.set(0.4, 0.85, 0);
   rightArm.rotation.z = -0.3;
   p.add(rightArm);
   
-  // 双腿
-  var legGeo = new THREE.CylinderGeometry(0.08, 0.07, 0.5, 6);
+  // 腿
   var legMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e });
-  
-  var leftLeg = new THREE.Mesh(legGeo, legMat);
+  var leftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.5, 6), legMat);
   leftLeg.position.set(-0.2, 0.35, 0);
   p.add(leftLeg);
   
-  var rightLeg = new THREE.Mesh(legGeo, legMat);
+  var rightLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.5, 6), legMat);
   rightLeg.position.set(0.2, 0.35, 0);
   p.add(rightLeg);
   
@@ -473,18 +466,18 @@ function createPlayer() {
 }
 
 function createParticleSystem() {
-  var count = 500;
+  var count = 600;
   var geo = new THREE.BufferGeometry();
   var positions = new Float32Array(count * 3);
   var colors = new Float32Array(count * 3);
   
   for(var i = 0; i < count; i++) {
-    positions[i*3] = (Math.random() - 0.5) * 25;
-    positions[i*3+1] = Math.random() * 15;
-    positions[i*3+2] = -Math.random() * 120;
+    positions[i*3] = (Math.random() - 0.5) * 30;
+    positions[i*3+1] = Math.random() * 20;
+    positions[i*3+2] = -Math.random() * 150;
     
-    colors[i*3] = 0;
-    colors[i*3+1] = 1;
+    colors[i*3] = Math.random() * 0.5;
+    colors[i*3+1] = 0.8 + Math.random() * 0.2;
     colors[i*3+2] = 1;
   }
   
@@ -492,10 +485,10 @@ function createParticleSystem() {
   geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
   
   var mat = new THREE.PointsMaterial({ 
-    size: 0.12, 
+    size: 0.15, 
     vertexColors: true, 
     transparent: true, 
-    opacity: 0.7,
+    opacity: 0.8,
     blending: THREE.AdditiveBlending
   });
   
@@ -503,14 +496,96 @@ function createParticleSystem() {
   scene.add(particleSystem);
 }
 
+function createCoinParticles() {
+  var count = 100;
+  var geo = new THREE.BufferGeometry();
+  var positions = new Float32Array(count * 3);
+  
+  for(var i = 0; i < count * 3; i++) {
+    positions[i] = 0;
+  }
+  
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  
+  var mat = new THREE.PointsMaterial({
+    size: 0.3,
+    color: 0xffd700,
+    transparent: true,
+    opacity: 0,
+    blending: THREE.AdditiveBlending
+  });
+  
+  coinParticles = new THREE.Points(geo, mat);
+  coinParticles.userData.particles = [];
+  scene.add(coinParticles);
+}
+
+function spawnCoinExplosion(x, y, z) {
+  var positions = coinParticles.geometry.attributes.position.array;
+  var newParticles = [];
+  
+  for(var i = 0; i < 20; i++) {
+    newParticles.push({
+      x: x, y: y, z: z,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: Math.random() * 0.3 + 0.1,
+      vz: (Math.random() - 0.5) * 0.3,
+      life: 1.0
+    });
+  }
+  
+  coinParticles.userData.particles = coinParticles.userData.particles.concat(newParticles);
+  coinParticles.material.opacity = 1;
+}
+
+function updateCoinParticles() {
+  var particles = coinParticles.userData.particles;
+  if(particles.length === 0) {
+    coinParticles.material.opacity = 0;
+    return;
+  }
+  
+  var positions = coinParticles.geometry.attributes.position.array;
+  
+  for(var i = particles.length - 1; i >= 0; i--) {
+    var p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.z += p.vz;
+    p.vy -= 0.01;
+    p.life -= 0.03;
+    
+    if(p.life <= 0) {
+      particles.splice(i, 1);
+    }
+  }
+  
+  for(var i = 0; i < particles.length; i++) {
+    positions[i*3] = particles[i].x;
+    positions[i*3+1] = particles[i].y;
+    positions[i*3+2] = particles[i].z;
+  }
+  
+  for(var i = particles.length; i < 100; i++) {
+    positions[i*3] = 0;
+    positions[i*3+1] = -100;
+    positions[i*3+2] = 0;
+  }
+  
+  coinParticles.geometry.attributes.position.needsUpdate = true;
+  coinParticles.material.opacity = Math.min(1, particles.length / 10);
+}
+
 function setMode(mode) {
   gameMode = mode;
+  playClickSound();
   document.querySelectorAll('.modeBtn').forEach(function(b) { b.classList.remove('selected'); });
   document.getElementById('mode' + (mode === 'story' ? 'Story' : 'Endless')).classList.add('selected');
 }
 
 function setDifficulty(level) {
   difficulty = level;
+  playClickSound();
   document.querySelectorAll('.diffBtn').forEach(function(b) { b.classList.remove('selected'); });
   document.querySelector('.diffBtn.' + level).classList.add('selected');
 }
@@ -526,9 +601,10 @@ function setLevel(n) {
   var level = LEVELS[currentLevel];
   
   scene.background = new THREE.Color(level.bg);
+  scene.fog.color = new THREE.Color(level.fog);
   ground.material.color.setHex(level.ground);
   ground.material.emissive = new THREE.Color(level.accent);
-  ground.material.emissiveIntensity = 0.1;
+  ground.material.emissiveIntensity = 0.15;
   
   document.getElementById('levelDisplay').textContent = gameMode === 'endless' ? '⚡ 极限模式' : level.name;
 }
@@ -548,8 +624,7 @@ function spawnObstacles() {
     }
   }
   
-  // 生成金币
-  if(Math.random() < 0.4) {
+  if(Math.random() < 0.5) {
     var coinLane = Math.floor(Math.random() * config.lanes);
     if(pattern[coinLane] === 0) {
       var coin = createCoin();
@@ -568,7 +643,7 @@ function createObstacle() {
   mat = new THREE.MeshStandardMaterial({ 
     color: 0xff3366, 
     emissive: 0xff0044,
-    emissiveIntensity: 0.3,
+    emissiveIntensity: 0.4,
     metalness: 0.6,
     roughness: 0.4
   });
@@ -591,7 +666,7 @@ function createCoin() {
   var mat = new THREE.MeshStandardMaterial({ 
     color: 0xffd700, 
     emissive: 0xffaa00,
-    emissiveIntensity: 0.5,
+    emissiveIntensity: 0.6,
     metalness: 0.9,
     roughness: 0.2
   });
@@ -602,7 +677,9 @@ function createCoin() {
 }
 
 function startGame() {
-  score = 0; coins = 0; distance = 0; levelScore = 0;
+  playClickSound();
+  
+  score = 0; coins = 0; distance = 0; levelScore = 0; lastLevelScore = 0;
   playerLane = Math.floor(LANE_CONFIG[difficulty].lanes / 2);
   targetLane = playerLane;
   
@@ -619,7 +696,7 @@ function startGame() {
   
   for(var i = 0; i < 3; i++) {
     spawnObstacles();
-    obstacles.forEach(function(o) { o.position.z -= i * 40; });
+    obstacles.forEach(function(o) { o.position.z -= i * 45; });
   }
   
   document.getElementById('startScreen').classList.add('hidden');
@@ -630,12 +707,15 @@ function startGame() {
 }
 
 function showStart() {
+  playClickSound();
   document.getElementById('gameOverScreen').classList.add('hidden');
   document.getElementById('startScreen').classList.remove('hidden');
 }
 
 function gameOver() {
   gameRunning = false;
+  playCollisionSound();
+  
   document.getElementById('gameUI').classList.remove('show');
   document.getElementById('gameOverScreen').classList.remove('hidden');
   
@@ -657,6 +737,7 @@ function gameOver() {
     '最高分: ' + highScore;
 }
 
+// 碰撞检测 - 更加宽容
 function checkCollision() {
   var playerX = getLaneX(playerLane);
   var playerZ = 0;
@@ -666,7 +747,8 @@ function checkCollision() {
     var dz = Math.abs(obs.position.z - playerZ);
     var dx = Math.abs(obs.position.x - playerX);
     
-    if(obs.userData.lane === playerLane && dz < 2.5 && dx < 1.0) {
+    // 放宽碰撞检测到 3.0 单位
+    if(obs.userData.lane === playerLane && dz < 3.0 && dx < 1.2) {
       return true;
     }
   }
@@ -684,25 +766,27 @@ function checkCoinCollection() {
     var dz = Math.abs(coin.position.z - playerZ);
     var dx = Math.abs(coin.position.x - playerX);
     
-    if(dz < 1.2 && dx < 0.8) {
+    if(dz < 1.5 && dx < 1.0) {
       coin.userData.collected = true;
       scene.remove(coin);
       coinsArr.splice(i, 1);
       coins += 1;
       score += 10;
+      playCoinSound();
+      spawnCoinExplosion(coin.position.x, coin.position.y, coin.position.z);
     }
   }
 }
 
 // 输入
-document.addEventListener('keydown', function(e) {
+document.addEventListener("keydown", function(e) {
   if(!gameRunning) return;
   var maxLane = LANE_CONFIG[difficulty].lanes - 1;
-  if(e.key === 'ArrowLeft' || e.key === 'a') targetLane = Math.max(0, targetLane - 1);
-  if(e.key === 'ArrowRight' || e.key === 'd') targetLane = Math.min(maxLane, targetLane + 1);
+  if(e.key === "ArrowLeft" || e.key === "a") targetLane = Math.max(0, targetLane - 1);
+  if(e.key === "ArrowRight" || e.key === "d") targetLane = Math.min(maxLane, targetLane + 1);
 });
 
-document.addEventListener('mousemove', function(e) {
+document.addEventListener("mousemove", function(e) {
   if(!gameRunning) return;
   var maxLane = LANE_CONFIG[difficulty].lanes - 1;
   var x = e.clientX / window.innerWidth;
@@ -710,7 +794,7 @@ document.addEventListener('mousemove', function(e) {
   targetLane = Math.max(0, Math.min(maxLane, targetLane));
 });
 
-document.addEventListener('touchstart', function(e) {
+document.addEventListener("touchstart", function(e) {
   if(!gameRunning) return;
   var startX = e.touches[0].clientX;
   var handleMove = function(ev) {
@@ -723,11 +807,11 @@ document.addEventListener('touchstart', function(e) {
     }
   };
   var handleEnd = function() {
-    document.removeEventListener('touchmove', handleMove);
-    document.removeEventListener('touchend', handleEnd);
+    document.removeEventListener("touchmove", handleMove);
+    document.removeEventListener("touchend", handleEnd);
   };
-  document.addEventListener('touchmove', handleMove);
-  document.addEventListener('touchend', handleEnd);
+  document.addEventListener("touchmove", handleMove);
+  document.addEventListener("touchend", handleEnd);
 });
 
 function gameLoop() {
@@ -739,28 +823,27 @@ function gameLoop() {
     var config = CONFIG[difficulty];
     var speed = config.speed;
     
-    // 极限模式速度递增
-    if(gameMode === 'endless') {
+    if(gameMode === "endless") {
       speed += score * 0.0001;
     }
     
-    // 玩家移动
-    playerLane += (targetLane - playerLane) * 0.12;
+    // 玩家移动 - 更加平滑
+    playerLane += (targetLane - playerLane) * 0.1;
     player.position.x = getLaneX(Math.round(playerLane));
-    player.rotation.z = (targetLane - playerLane) * 0.25;
-    player.rotation.y = (targetLane - playerLane) * 0.1;
+    player.rotation.z = (targetLane - playerLane) * 0.3;
+    player.rotation.y = (targetLane - playerLane) * 0.15;
     player.position.y = Math.sin(Date.now() * 0.006) * 0.05;
     
     // 障碍物移动
     obstacles.forEach(function(o) {
       o.position.z += speed;
-      o.rotation.y += 0.01;
+      o.rotation.y += 0.015;
     });
     
     // 障碍物回收
     obstacles.forEach(function(o) {
       if(o.position.z > 15) {
-        o.position.z = -80 - Math.random() * 20;
+        o.position.z = -80 - Math.random() * 25;
         o.userData.lane = Math.floor(Math.random() * LANE_CONFIG[difficulty].lanes);
         o.position.x = getLaneX(o.userData.lane);
       }
@@ -769,7 +852,7 @@ function gameLoop() {
     // 金币移动和旋转
     coinsArr.forEach(function(c) {
       c.position.z += speed;
-      c.rotation.z += 0.05;
+      c.rotation.z += 0.06;
     });
     
     // 金币回收
@@ -781,10 +864,12 @@ function gameLoop() {
     }
     
     // 生成
-    if(Math.random() < 0.015) spawnObstacles();
+    if(Math.random() < 0.018) spawnObstacles();
     
     // 检测
-    if(checkCollision()) gameOver();
+    if(checkCollision()) {
+      gameOver();
+    }
     checkCoinCollection();
     
     // 分数
@@ -793,38 +878,44 @@ function gameLoop() {
     levelScore += Math.floor(speed * 2);
     
     // 关卡/模式切换
-    if(gameMode === 'story' && levelScore > 500) {
-      levelScore = 0;
+    if(gameMode === "story" && levelScore > 500 && lastLevelScore <= 500) {
+      playLevelUpSound();
       if(currentLevel < LEVELS.length - 1) {
         currentLevel++;
         setLevel(currentLevel);
       }
-    } else if(gameMode === 'endless' && levelScore > 200) {
       levelScore = 0;
+    } else if(gameMode === "endless" && levelScore > 200 && lastLevelScore <= 200) {
+      playLevelUpSound();
       setLevel(Math.floor(Math.random() * LEVELS.length));
+      levelScore = 0;
     }
+    lastLevelScore = levelScore;
     
     // UI更新
-    document.getElementById('scoreDisplay').textContent = score;
-    document.getElementById('coinDisplay').textContent = coins;
-    document.getElementById('distDisplay').textContent = Math.floor(distance);
+    document.getElementById("scoreDisplay").textContent = score;
+    document.getElementById("coinDisplay").textContent = coins;
+    document.getElementById("distDisplay").textContent = Math.floor(distance);
     
-    var progress = gameMode === 'endless' ? (levelScore / 200) * 100 : (levelScore / 500) * 100;
-    document.getElementById('progressBar').style.width = Math.min(progress, 100) + '%';
+    var progress = gameMode === "endless" ? (levelScore / 200) * 100 : (levelScore / 500) * 100;
+    document.getElementById("progressBar").style.width = Math.min(progress, 100) + "%";
     
     // 粒子
     var positions = particleSystem.geometry.attributes.position.array;
     for(var i = 0; i < positions.length; i += 3) {
       positions[i + 2] += speed * 0.5;
-      if(positions[i + 2] > 10) positions[i + 2] = -120;
+      if(positions[i + 2] > 10) positions[i + 2] = -150;
     }
-    particleSystem.geometry.attributes.position.needsUpdate =    true;
+    particleSystem.geometry.attributes.position.needsUpdate = true;
+    
+    // 金币粒子
+    updateCoinParticles();
   }
   
   renderer.render(scene, camera);
 }
 
-window.addEventListener('resize', function() {
+window.addEventListener("resize", function() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -833,7 +924,7 @@ window.addEventListener('resize', function() {
 init();
 gameLoop();
 
-console.log('滑板人生 3D 精致版 初始化完成');
+console.log("滑板人生 3D 优化版 初始化完成");
 </script>
 </body>
 </html>

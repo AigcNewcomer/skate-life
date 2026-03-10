@@ -9,42 +9,93 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Orbitron', sans-serif; }
 #game { width: 100%; height: 100%; display: block; }
+
+/* 增强的启动画面 */
 .screen { position: fixed; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; background: linear-gradient(180deg, #0a0015 0%, #1a0a2e 50%, #0a0015 100%); transition: opacity 0.5s; }
+.screen::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(ellipse at 50% 0%, rgba(0,255,255,0.15) 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(255,0,255,0.1) 0%, transparent 40%); pointer-events: none; }
 .screen.hidden { opacity: 0; pointer-events: none; }
-.title { font-size: clamp(2.5rem, 12vw, 6rem); color: #fff; text-shadow: 0 0 50px #0ff, 0 0 100px #0ff, 0 0 150px #f0f; margin-bottom: 20px; animation: glow 2s ease-in-out infinite alternate; }
+
+/* 标题动画 */
+.title { font-size: clamp(2.5rem, 12vw, 6rem); color: #fff; text-shadow: 0 0 50px #0ff, 0 0 100px #0ff, 0 0 150px #f0f; margin-bottom: 20px; animation: glow 2s ease-in-out infinite alternate; position: relative; }
+.title::after { content: '🛹'; position: absolute; left: -60px; top: 50%; transform: translateY(-50%); font-size: 0.6em; animation: float 3s ease-in-out infinite; }
 @keyframes glow { from { text-shadow: 0 0 50px #0ff, 0 0 100px #0ff; } to { text-shadow: 0 0 60px #f0f, 0 0 120px #f0f, 0 0 180px #0ff; } }
-.subtitle { font-size: clamp(0.8rem, 3vw, 1.2rem); color: rgba(255,255,255,0.5); margin-bottom: 40px; letter-spacing: 15px; }
+@keyframes float { 0%, 100% { transform: translateY(-50%) translateX(0); } 50% { transform: translateY(-60%) translateX(10px); } }
+.subtitle { font-size: clamp(0.8rem, 3vw, 1.2rem); color: rgba(255,255,255,0.5); margin-bottom: 40px; letter-spacing: 15px; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.8; } }
+
+/* 模式选择 - 增强卡片样式 */
 .modeSelect { display: flex; flex-direction: column; gap: 18px; margin-bottom: 35px; width: min(340px, 85vw); }
-.modeBtn { width: 100%; padding: 22px; border-radius: 18px; border: 2px solid rgba(0,255,255,0.35); background: linear-gradient(135deg, rgba(0,255,255,0.1), rgba(255,0,255,0.1)); color: #fff; font-family: 'Orbitron'; font-size: 1.2rem; cursor: pointer; transition: all 0.3s; }
-.modeBtn:hover { border-color: #0ff; box-shadow: 0 0 40px rgba(0,255,255,0.5); transform: scale(1.02); }
-.modeBtn.selected { border-color: #0ff; background: linear-gradient(135deg, rgba(0,255,255,0.2), rgba(255,0,255,0.2)); box-shadow: 0 0 50px rgba(0,255,255,0.5); }
+.modeBtn { position: relative; width: 100%; padding: 22px; border-radius: 18px; border: 2px solid rgba(0,255,255,0.35); background: linear-gradient(135deg, rgba(0,255,255,0.08) 0%, rgba(255,0,255,0.08) 100%); color: #fff; font-family: 'Orbitron'; font-size: 1.2rem; cursor: pointer; transition: all 0.3s; overflow: hidden; }
+.modeBtn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition: left 0.5s; }
+.modeBtn:hover::before { left: 100%; }
+.modeBtn:hover { border-color: #0ff; box-shadow: 0 0 40px rgba(0,255,255,0.5), inset 0 0 20px rgba(0,255,255,0.1); transform: scale(1.02); }
+.modeBtn.selected { border-color: #0ff; background: linear-gradient(135deg, rgba(0,255,255,0.2) 0%, rgba(255,0,255,0.2) 100%); box-shadow: 0 0 50px rgba(0,255,255,0.5), 0 0 100px rgba(255,0,255,0.3); }
+.modeBtn.selected::after { content: '✓'; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #0ff; font-size: 1.2rem; }
 .modeBtn.locked { opacity: 0.5; }
 .modeBtn.locked::after { content: ' 🔒'; margin-left: 10px; }
+
+/* 难度选择 - 药丸按钮 */
 .difficulty { display: flex; gap: 15px; margin-bottom: 35px; }
-.diffBtn { padding: 15px 30px; border-radius: 30px; border: 2px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: #fff; font-family: 'Orbitron'; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; }
-.diffBtn:hover { background: rgba(255,255,255,0.15); }
-.diffBtn.selected { border-color: #0ff; box-shadow: 0 0 25px rgba(0,255,255,0.5); }
-.diffBtn.easy.selected { border-color: #4CAF50; }
-.diffBtn.medium.selected { border-color: #FF9800; }
-.diffBtn.hard.selected { border-color: #f44336; }
-.gameBtn { background: linear-gradient(135deg, #0ff, #f0f, #0ff); background-size: 200% 200%; color: #000; border: none; padding: 22px 65px; font-size: clamp(1.1rem, 4vw, 1.5rem); font-family: 'Orbitron'; font-weight: bold; border-radius: 60px; cursor: pointer; animation: gradientShift 3s ease infinite; box-shadow: 0 0 50px rgba(0,255,255,0.6); transition: transform 0.2s; }
+.diffBtn { position: relative; padding: 15px 30px; border-radius: 30px; border: 2px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: #fff; font-family: 'Orbitron'; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; }
+.diffBtn::after { content: ''; position: absolute; inset: -2px; border-radius: 32px; background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent); opacity: 0; transition: opacity 0.3s; }
+.diffBtn:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
+.diffBtn:hover::after { opacity: 1; }
+.diffBtn.selected { transform: scale(1.05); }
+.diffBtn.easy.selected { border-color: #4CAF50; box-shadow: 0 0 25px rgba(76,175,80,0.5); }
+.diffBtn.medium.selected { border-color: #FF9800; box-shadow: 0 0 25px rgba(255,152,0,0.5); }
+.diffBtn.hard.selected { border-color: #f44336; box-shadow: 0 0 25px rgba(244,67,54,0.5); }
+
+/* 开始按钮 - 炫酷渐变 */
+.gameBtn { position: relative; background: linear-gradient(135deg, #0ff, #f0f, #0ff); background-size: 200% 200%; color: #000; border: none; padding: 22px 65px; font-size: clamp(1.1rem, 4vw, 1.5rem); font-family: 'Orbitron'; font-weight: bold; border-radius: 60px; cursor: pointer; animation: gradientShift 3s ease infinite, btnGlow 2s ease-in-out infinite alternate; box-shadow: 0 0 50px rgba(0,255,255,0.6), 0 10px 30px rgba(0,0,0,0.3); transition: transform 0.2s, box-shadow 0.2s; }
 @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-.gameBtn:hover { transform: scale(1.08); box-shadow: 0 0 70px rgba(0,255,255,0.8); }
+@keyframes btnGlow { from { box-shadow: 0 0 50px rgba(0,255,255,0.6); } to { box-shadow: 0 0 80px rgba(255,0,255,0.8); } }
+.gameBtn:hover { transform: scale(1.08); box-shadow: 0 0 70px rgba(0,255,255,0.8), 0 15px 40px rgba(0,0,0,0.4); }
+.gameBtn:active { transform: scale(0.98); }
+
+/* 统计信息 */
 .stats { margin-top: 35px; color: rgba(255,255,255,0.4); font-size: 1.1rem; display: flex; gap: 35px; }
-.stats span { color: #0ff; font-weight: bold; }
+.stats span { color: #0ff; font-weight: bold; text-shadow: 0 0 10px rgba(0,255,255,0.5); }
+
+/* 游戏UI - 毛玻璃效果 */
 #gameUI { position: fixed; top: 0; left: 0; right: 0; padding: 22px 28px; display: flex; justify-content: space-between; pointer-events: none; z-index: 50; opacity: 0; transition: opacity 0.3s; background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, transparent 100%); }
 #gameUI.show { opacity: 1; }
-.uiBox { background: rgba(0,0,0,0.75); backdrop-filter: blur(15px); padding: 16px 26px; border-radius: 40px; color: #fff; font-size: 1.2rem; border: 1px solid rgba(0,255,255,0.4); }
-.uiBox span { color: #0ff; font-weight: bold; }
-.level { position: fixed; top: 90px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); padding: 14px 28px; border-radius: 35px; color: #f0f; font-size: 1.1rem; border: 1px solid rgba(255,0,255,0.4); }
-.levelProgress { position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%); width: min(450px, 65%); height: 12px; background: rgba(255,255,255,0.2); border-radius: 6px; overflow: hidden; }
-.levelProgressBar { height: 100%; background: linear-gradient(90deg, #0ff, #f0f); border-radius: 6px; transition: width 0.3s; }
-.soundBtn { position: fixed; top: 22px; right: 22px; width: 55px; height: 55px; border-radius: 50%; background: rgba(0,0,0,0.75); border: 1px solid rgba(0,255,255,0.4); color: #0ff; font-size: 1.5rem; cursor: pointer; z-index: 60; }
+
+/* 增强的UI盒子 */
+.uiBox { position: relative; background: rgba(0,0,0,0.75); backdrop-filter: blur(15px); padding: 16px 26px; border-radius: 40px; color: #fff; font-size: 1.2rem; border: 1px solid rgba(0,255,255,0.4); box-shadow: 0 0 20px rgba(0,255,255,0.2), inset 0 0 20px rgba(0,255,255,0.05); transition: transform 0.2s; }
+.uiBox:hover { transform: scale(1.05); }
+.uiBox span { color: #0ff; font-weight: bold; text-shadow: 0 0 10px #0ff; }
+.uiBox::before { content: ''; position: absolute; top: -1px; left: 20%; right: 20%; height: 2px; background: linear-gradient(90deg, transparent, rgba(0,255,255,0.8), transparent); }
+
+/* 关卡显示 */
+.level { position: fixed; top: 90px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); backdrop-filter: blur(10px); padding: 14px 28px; border-radius: 35px; color: #f0f; font-size: 1.1rem; border: 1px solid rgba(255,0,255,0.4); box-shadow: 0 0 20px rgba(255,0,255,0.3); animation: levelPulse 2s ease-in-out infinite; }
+@keyframes levelPulse { 0%, 100% { box-shadow: 0 0 20px rgba(255,0,255,0.3); } 50% { box-shadow: 0 0 35px rgba(255,0,255,0.6); } }
+
+/* 进度条 */
+.levelProgress { position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%); width: min(450px, 65%); height: 12px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); box-shadow: inset 0 2px 5px rgba(0,0,0,0.3); }
+.levelProgressBar { height: 100%; background: linear-gradient(90deg, #0ff, #f0f); border-radius: 6px; transition: width 0.3s; box-shadow: 0 0 15px rgba(0,255,255,0.5); position: relative; }
+.levelProgressBar::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%; background: linear-gradient(180deg, rgba(255,255,255,0.4), transparent); border-radius: 6px 6px 0 0; }
+
+/* 音效按钮 */
+.soundBtn { position: fixed; top: 22px; right: 22px; width: 55px; height: 55px; border-radius: 50%; background: rgba(0,0,0,0.75); border: 1px solid rgba(0,255,255,0.4); color: #0ff; font-size: 1.5rem; cursor: pointer; z-index: 60; transition: all 0.3s; backdrop-filter: blur(10px); }
+.soundBtn:hover { transform: scale(1.1); box-shadow: 0 0 25px rgba(0,255,255,0.5); }
+
+/* 天气切换按钮 */
+.weatherBtn { position: fixed; top: 22px; right: 90px; width: 55px; height: 55px; border-radius: 50%; background: rgba(0,0,0,0.75); border: 1px solid rgba(255,0,255,0.4); color: #f0f; font-size: 1.5rem; cursor: pointer; z-index: 60; transition: all 0.3s; backdrop-filter: blur(10px); }
+.weatherBtn:hover { transform: scale(1.1); box-shadow: 0 0 25px rgba(255,0,255,0.5); }
+.weatherBtn.rain { animation: rainBounce 0.5s ease-in-out infinite; }
+@keyframes rainBounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+/* 连击显示 */
+.combo { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; color: #ffd700; text-shadow: 0 0 30px #ffd700, 0 0 60px #ff6600; opacity: 0; pointer-events: none; z-index: 70; }
+.combo.show { animation: comboShow 0.8s ease-out forwards; }
+@keyframes comboShow { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -80%) scale(1); } }
 </style>
 </head>
 <body>
 <canvas id="game"></canvas>
 <button class="soundBtn" onclick="toggleSound()">🔊</button>
+<button class="weatherBtn" onclick="toggleWeather()">☀️</button>
+<div class="combo" id="comboDisplay"></div>
 
 <div id="startScreen" class="screen">
   <div class="title">🛹 滑板人生</div>
@@ -84,6 +135,127 @@ const LEVELS = [
   { name: '第 8 关', bg: 0x0a0020, ground: 0x00ffff, accent: 0xff00ff, fog: 0x0a0020 }
 ];
 const GAME_SPEED = { easy: 0.15, medium: 0.28, hard: 0.45 };
+
+// 天气系统
+let weatherOn = false;
+let raindrops = [];
+const RAINDROP_COUNT = 800;
+
+function createRaindrops() {
+  const rainGeo = new THREE.BufferGeometry();
+  const rainPos = new Float32Array(RAINDROP_COUNT * 3);
+  for(let i = 0; i < RAINDROP_COUNT; i++) {
+    rainPos[i*3] = (Math.random() - 0.5) * 60;
+    rainPos[i*3+1] = Math.random() * 40;
+    rainPos[i*3+2] = (Math.random() - 0.5) * 200 - 50;
+  }
+  rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
+  const rainMat = new THREE.PointsMaterial({ color: 0xaaaaff, size: 0.15, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending });
+  return new THREE.Points(rainGeo, rainMat);
+}
+
+const rainSystem = createRaindrops();
+rainSystem.visible = false;
+scene.add(rainSystem);
+
+function toggleWeather() {
+  weatherOn = !weatherOn;
+  rainSystem.visible = weatherOn;
+  document.querySelector('.weatherBtn').textContent = weatherOn ? '🌧️' : '☀️';
+  document.querySelector('.weatherBtn').classList.toggle('rain', weatherOn);
+  playClickSound();
+}
+
+function updateRain(speed) {
+  if(!weatherOn) return;
+  const pos = rainSystem.geometry.attributes.position.array;
+  for(let i = 0; i < RAINDROP_COUNT; i++) {
+    pos[i*3+1] -= 0.8 + speed * 2;
+    pos[i*3+2] += speed * 0.5;
+    if(pos[i*3+1] < 0) { pos[i*3+1] = 40; pos[i*3+2] = (Math.random() - 0.5) * 200 - 50; }
+    if(pos[i*3+2] > 20) pos[i*3+2] = -150;
+  }
+  rainSystem.geometry.attributes.position.needsUpdate = true;
+}
+
+// 滑板火花尾迹效果
+let sparkParticles = null;
+const SPARK_COUNT = 100;
+
+function createSparkSystem() {
+  const sparkGeo = new THREE.BufferGeometry();
+  const sparkPos = new Float32Array(SPARK_COUNT * 3);
+  const sparkCol = new Float32Array(SPARK_COUNT * 3);
+  const sparkLife = new Float32Array(SPARK_COUNT);
+  for(let i = 0; i < SPARK_COUNT; i++) {
+    sparkPos[i*3] = 0; sparkPos[i*3+1] = -10; sparkPos[i*3+2] = 0;
+    sparkCol[i*3] = 1; sparkCol[i*3+1] = 0.5 + Math.random() * 0.5; sparkCol[i*3+2] = 0;
+    sparkLife[i] = 0;
+  }
+  sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
+  sparkGeo.setAttribute('color', new THREE.BufferAttribute(sparkCol, 3));
+  const sparkMat = new THREE.PointsMaterial({ size: 0.3, vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
+  return new THREE.Points(sparkGeo, sparkMat);
+}
+
+sparkParticles = createSparkSystem();
+scene.add(sparkParticles);
+
+let sparkIndex = 0;
+function emitSparks() {
+  if(!gameRunning) return;
+  const pos = sparkParticles.geometry.attributes.position.array;
+  const col = sparkParticles.geometry.attributes.position.array;
+  const lane = LANE_COUNT[difficulty];
+  const px = player.position.x;
+  for(let i = 0; i < 3; i++) {
+    const idx = sparkIndex % SPARK_COUNT;
+    pos[idx*3] = px + (Math.random() - 0.5) * 0.5;
+    pos[idx*3+1] = 0.2;
+    pos[idx*3+2] = 1.5 + Math.random() * 0.5;
+    sparkIndex++;
+  }
+  sparkParticles.geometry.attributes.position.needsUpdate = true;
+}
+
+function updateSparks() {
+  const pos = sparkParticles.geometry.attributes.position.array;
+  for(let i = 0; i < SPARK_COUNT; i++) {
+    if(pos[i*3+1] >= 0) {
+      pos[i*3+1] -= 0.15;
+      pos[i*3] += (Math.random() - 0.5) * 0.2;
+      pos[i*3+2] += 0.1;
+    } else {
+      pos[i*3+1] = -10;
+    }
+  }
+  sparkParticles.geometry.attributes.position.needsUpdate = true;
+}
+
+// 连击系统
+let comboCount = 0;
+let lastCoinTime = 0;
+function checkCombo() {
+  const now = Date.now();
+  if(now - lastCoinTime < 1500) {
+    comboCount++;
+    if(comboCount >= 2) showCombo(comboCount);
+  } else {
+    comboCount = 1;
+  }
+  lastCoinTime = now;
+}
+
+function showCombo(count) {
+  const el = document.getElementById('comboDisplay');
+  el.textContent = count + ' COMBO!';
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  // 连击加分
+  score += count * 5;
+  playCoinSound();
+}
 
 let soundOn = true, audioCtx = null;
 function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
@@ -343,6 +515,7 @@ function checkCoinCollection() {
       coinItems.splice(i, 1);
       coins++;
       score += 10;
+      checkCombo();
       playCoinSound();
     }
   }
@@ -428,6 +601,13 @@ function animate() {
       if(pos[i+2] > 15) pos[i+2] = -250;
     }
     particleSystem.geometry.attributes.position.needsUpdate = true;
+
+    // 更新天气系统
+    updateRain(speed);
+
+    // 更新火花尾迹
+    updateSparks();
+    if(Math.random() < 0.3) emitSparks();
   }
   
   renderer.render(scene, camera);

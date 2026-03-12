@@ -115,7 +115,8 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font
 
 <div id="gameUI">
   <div class="uiBox">⭐ <span id="scoreDisplay">0</span></div>
-  <div class="uiBox">💎 <span id="coinDisplay">0</span></div>
+  <div class="uiBox">💎 <span id="coinDisplay">0</span> <span style="font-size:0.7em;opacity:0.7">/</span> <span id="totalCoinsDisplay" style="font-size:0.7em;opacity:0.7">0</span></div>
+  <div class="uiBox" id="difficultyDisplay" style="font-size:0.8em"></div>
   <div class="uiBox">🏃 <span id="distDisplay">0</span>m</div>
 </div>
 <div class="level" id="levelDisplay">第 1 关</div>
@@ -123,18 +124,51 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-const LANE_COUNT = { easy: 3, medium: 4, hard: 5 };
+// ==================== 关卡系统 v2 ====================
+// 难度等级定义
+const DIFFICULTY_CONFIG = {
+  easy: { lanes: 3, speed: 0.15, coinMult: 1.0, timeLimit: 120, name: '简单' },
+  medium: { lanes: 4, speed: 0.28, coinMult: 1.5, timeLimit: 90, name: '普通' },
+  hard: { lanes: 5, speed: 0.45, coinMult: 2.0, timeLimit: 60, name: '困难' },
+  elite: { lanes: 6, speed: 0.6, coinMult: 3.0, timeLimit: 45, name: '精英' }
+};
+
+// 主题场景定义
+const THEMES = {
+  neon: { name: '霓虹之夜', bg: 0x1a0a15, ground: 0xff69b4, accent: 0xff1493, fog: 0x1a0a15, obstacles: ['neon-barrier', 'moving-car'] },
+  sunset: { name: '夕阳海滩', bg: 0x1a1005, ground: 0xff6347, accent: 0xffd700, fog: 0x1a1005, obstacles: ['sand-dune', 'beach-ball'] },
+  forest: { name: '雨林冒险', bg: 0x051005, ground: 0x228b22, accent: 0x90ee90, fog: 0x051005, obstacles: ['vine', 'tree-root'] },
+  cyber: { name: '赛博都市', bg: 0x0a0a0a, ground: 0x444444, accent: 0xaaaaaa, fog: 0x0a0a0a, obstacles: [' hologram', 'drone'] },
+  ocean: { name: '深海遨游', bg: 0x000020, ground: 0x4444ff, accent: 0xff00ff, fog: 0x000020, obstacles: ['bubble', 'seaweed'] },
+  arctic: { name: '冰雪王国', bg: 0x051520, ground: 0x88ddff, accent: 0x00ffff, fog: 0x051520, obstacles: ['ice-berg', 'snow-ball'] },
+  volcano: { name: '火山熔岩', bg: 0x1a1000, ground: 0xff6600, accent: 0xff3300, fog: 0x1a1000, obstacles: ['lava-rock', 'fire-trap'] },
+  galaxy: { name: '星河漫步', bg: 0x0a0020, ground: 0x00ffff, accent: 0xff00ff, fog: 0x0a0020, obstacles: ['asteroid', 'ufo'] }
+};
+
+// 关卡数据 v2 - 包含主题和难度
 const LEVELS = [
-  { name: '第 1 关', bg: 0x1a0a15, ground: 0xff69b4, accent: 0xff1493, fog: 0x1a0a15 },
-  { name: '第 2 关', bg: 0x1a1005, ground: 0xff6347, accent: 0xffd700, fog: 0x1a1005 },
-  { name: '第 3 关', bg: 0x051005, ground: 0x228b22, accent: 0x90ee90, fog: 0x051005 },
-  { name: '第 4 关', bg: 0x0a0a0a, ground: 0x444444, accent: 0xaaaaaa, fog: 0x0a0a0a },
-  { name: '第 5 关', bg: 0x000020, ground: 0x4444ff, accent: 0xff00ff, fog: 0x000020 },
-  { name: '第 6 关', bg: 0x051520, ground: 0x88ddff, accent: 0x00ffff, fog: 0x051520 },
-  { name: '第 7 关', bg: 0x1a1000, ground: 0xff6600, accent: 0xff3300, fog: 0x1a1000 },
-  { name: '第 8 关', bg: 0x0a0020, ground: 0x00ffff, accent: 0xff00ff, fog: 0x0a0020 }
+  { id: 1, name: '第 1 关', theme: 'neon', difficulty: 'easy', length: 400, reward: 80,
+      desc: '滑动左右键躲避障碍，收集金币！' },
+  { id: 2, name: '第 2 关', theme: 'sunset', difficulty: 'easy', length: 600, reward: 80 },
+  { id: 3, name: '第 3 关', theme: 'forest', difficulty: 'medium', length: 700, reward: 120 },
+  { id: 4, name: '第 4 关', theme: 'cyber', difficulty: 'medium', length: 800, reward: 160 },
+  { id: 5, name: '第 5 关', theme: 'ocean', difficulty: 'hard', length: 900, reward: 250 },
+  { id: 6, name: '第 6 关', theme: 'arctic', difficulty: 'hard', length: 1000, reward: 320 },
+  { id: 7, name: '第 7 关', theme: 'volcano', difficulty: 'elite', length: 1200, reward: 500 },
+  { id: 8, name: '第 8 关', theme: 'galaxy', difficulty: 'elite', length: 1500, reward: 800 }
 ];
+
+// 兼容旧版
+const LANE_COUNT = { easy: 3, medium: 4, hard: 5 };
 const GAME_SPEED = { easy: 0.15, medium: 0.28, hard: 0.45 };
+
+// 获取当前关卡配置
+function getLevelConfig(levelIndex) {
+  const level = LEVELS[levelIndex] || LEVELS[0];
+  const diff = DIFFICULTY_CONFIG[level.difficulty] || DIFFICULTY_CONFIG.easy;
+  const theme = THEMES[level.theme] || THEMES.neon;
+  return { ...diff, ...theme, level };
+}
 
 // 天气系统
 let weatherOn = false;
@@ -157,6 +191,35 @@ function createRaindrops() {
 const rainSystem = createRaindrops();
 rainSystem.visible = false;
 scene.add(rainSystem);
+
+// 第一关霓虹门装饰
+function createNeonGate() {
+  const group = new THREE.Group();
+  // 左侧霓虹柱
+  const leftPost = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.3, 0.3, 20, 8),
+    new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00ffff, emissiveIntensity: 2 })
+  );
+  leftPost.position.set(-8, 10, -50);
+  group.add(leftPost);
+  // 右侧霓虹柱
+  const rightPost = leftPost.clone();
+  rightPost.position.set(8, 10, -50);
+  group.add(rightPost);
+  // 顶部霓虹弧
+  const topArc = new THREE.Mesh(
+    new THREE.TorusGeometry(8, 0.2, 8, 32, Math.PI),
+    new THREE.MeshStandardMaterial({ color: 0xff00ff, emissive: 0xff00ff, emissiveIntensity: 2 })
+  );
+  topArc.position.set(0, 20, -50);
+  topArc.rotation.x = Math.PI / 2;
+  group.add(topArc);
+  // 发光文字
+  return group;
+}
+const neonGate = createNeonGate();
+scene.add(neonGate);
+
 
 function toggleWeather() {
   weatherOn = !weatherOn;
@@ -505,12 +568,100 @@ function checkCollision() {
 
 function checkCoinCollection() {
   const playerZ = 0;
-  for(let i = coinItems.length - 1; i >= 0; i--) {
+  // ==================== 金币系统 v2 ====================
+// 金币收集特效
+const coinParticles = [];
+const COIN_PARTICLE_COUNT = 20;
+
+function createCoinCollectEffect(coinPosition) {
+  const particles = [];
+  for(let i = 0; i < COIN_PARTICLE_COUNT; i++) {
+    const geo = new THREE.SphereGeometry(0.08, 8, 8);
+    const mat = new THREE.MeshBasicMaterial({ color: 0xffd700, transparent: true, opacity: 1 });
+    const p = new THREE.Mesh(geo, mat);
+    p.position.copy(coinPosition);
+    p.velocity = new THREE.Vector3(
+      (Math.random() - 0.5) * 0.3,
+      Math.random() * 0.2 + 0.1,
+      (Math.random() - 0.5) * 0.3
+    );
+    p.life = 1.0;
+    scene.add(p);
+    particles.push(p);
+  }
+  coinParticles.push(...particles);
+}
+
+function updateCoinParticles() {
+  for(let i = coinParticles.length - 1; i >= 0; i--) {
+    const p = coinParticles[i];
+    p.position.add(p.velocity);
+    p.velocity.y -= 0.01; // 重力
+    p.life -= 0.03;
+    p.material.opacity = p.life;
+    p.scale.setScalar(p.life);
+    if(p.life <= 0) {
+      scene.remove(p);
+      coinParticles.splice(i, 1);
+    }
+  }
+}
+
+// 关卡金币奖励
+function addLevelReward() {
+  const level = LEVELS[currentLevel] || LEVELS[0];
+  const diff = DIFFICULTY_CONFIG[level.difficulty] || DIFFICULTY_CONFIG.easy;
+  const reward = Math.floor(level.reward * diff.coinMult);
+  coins += reward;
+  score += reward * 10;
+  showRewardPopup(reward);
+}
+
+function showRewardPopup(amount) {
+  const popup = document.createElement('div');
+  popup.style.cssText = `
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 2rem; color: #ffd700; text-shadow: 0 0 20px #ffd700;
+    animation: comboShow 1s ease-out forwards; z-index: 100;
+  `;
+  popup.textContent = `+${amount} 💎`;
+  document.body.appendChild(popup);
+  setTimeout(() => popup.remove(), 1000);
+}
+
+// 存档管理
+function saveGameData() {
+  const data = {
+    totalCoins: (window.gameData?.totalCoins || 0) + coins,
+    highScore: Math.max(window.gameData?.highScore || 0, score),
+    levelsUnlocked: Math.max(window.gameData?.levelsUnlocked || 1, currentLevel + 1),
+    savedAt: Date.now()
+  };
+  window.gameData = data;
+  localStorage.setItem('skateLifeData', JSON.stringify(data));
+}
+
+function loadGameData() {
+  try {
+    const data = JSON.parse(localStorage.getItem('skateLifeData'));
+    window.gameData = data || { totalCoins: 0, highScore: 0, levelsUnlocked: 1 };
+  } catch(e) {
+    window.gameData = { totalCoins: 0, highScore: 0, levelsUnlocked: 1 };
+  }
+  return window.gameData;
+}
+
+// 初始化存档
+loadGameData();
+
+// 金币收集逻辑
+for(let i = coinItems.length - 1; i >= 0; i--) {
     const coin = coinItems[i];
     if(coin.userData.collected) continue;
     const dz = Math.abs(coin.position.z - playerZ);
     if(dz < 2.5) {
       coin.userData.collected = true;
+      createCoinCollectEffect(coin.position.clone());
       scene.remove(coin);
       coinItems.splice(i, 1);
       coins++;
@@ -520,6 +671,9 @@ function checkCoinCollection() {
     }
   }
 }
+
+// 更新金币粒子
+updateCoinParticles();
 
 document.addEventListener('keydown', e => {
   if(!gameRunning) return;
@@ -580,10 +734,14 @@ function animate() {
     
     if(gameMode === 'story' && levelScore > 500 && lastLevelScore <= 500) {
       playUpSound();
+      addLevelReward(); // 关卡完成奖励金币
+      saveGameData(); // 保存存档
       if(currentLevel < LEVELS.length - 1) { currentLevel++; setLevel(currentLevel); }
       levelScore = 0;
     } else if(gameMode === 'endless' && levelScore > 200 && lastLevelScore <= 200) {
       playUpSound();
+      addLevelReward(); // 关卡完成奖励金币
+      saveGameData(); // 保存存档
       setLevel(Math.floor(Math.random() * LEVELS.length));
       levelScore = 0;
     }
@@ -591,6 +749,17 @@ function animate() {
     
     document.getElementById('scoreDisplay').textContent = score;
     document.getElementById('coinDisplay').textContent = coins;
+    document.getElementById('totalCoinsDisplay').textContent = window.gameData?.totalCoins || 0;
+    
+    // 显示当前关卡难度
+    const level = LEVELS[currentLevel] || LEVELS[0];
+    const diff = DIFFICULTY_CONFIG[level.difficulty] || DIFFICULTY_CONFIG.easy;
+    const diffDisplay = document.getElementById('difficultyDisplay');
+    if(diffDisplay) {
+      const multipliers = { 1: 'x1', 1.5: 'x1.5', 2: 'x2', 3: 'x3' };
+      diffDisplay.textContent = `${diff.name} ${multipliers[diff.coinMult] || 'x1'}`;
+    }
+    
     document.getElementById('distDisplay').textContent = Math.floor(distance);
     const progress = (gameMode === 'endless' ? levelScore / 200 : levelScore / 500) * 100;
     document.getElementById('progressBar').style.width = Math.min(progress, 100) + '%';

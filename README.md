@@ -16,6 +16,11 @@
   - 装饰：棕榈树、太阳、草帽
   - 地面：沙滩颜色(#F4A460)
 
+## 平台支持
+
+- ✅ **Web 端**: [https://skate-life.pages.dev/](https://skate-life.pages.dev/)
+- 🔜 **Android**: 计划中
+
 ## 技术
 
 - Three.js 3D 渲染

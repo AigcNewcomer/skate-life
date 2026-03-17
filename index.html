@@ -85,6 +85,24 @@ const LEVELS = [
 ];
 const GAME_SPEED = { easy: 0.15, medium: 0.28, hard: 0.45 };
 
+// ========== 障碍物生成系统优化 ==========
+const OBSTACLE_PATTERNS = {
+  easy_3: [[1,0,0],[0,1,0],[0,0,1],[1,0,1]],
+  medium_4: [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1],[1,1,0,0],[0,0,1,1],[1,0,0,1]],
+  hard_5: [[1,0,0,0,0],[0,1,0,0,0],[0,0,1,0,0],[0,0,0,1,0],[0,0,0,0,1],[1,1,0,0,0],[0,0,1,1,0],[0,0,0,1,1],[1,0,0,0,1],[1,0,1,0,1]]
+};
+const Z_GAP_CONFIG = { easy: { min: 30, max: 45 }, medium: { min: 22, max: 35 }, hard: { min: 15, max: 28 } };
+const DIFFICULTY_CONFIG = { easy: { maxBlock: 1, coinChance: 0.65 }, medium: { maxBlock: 2, coinChance: 0.55 }, hard: { maxBlock: 3, coinChance: 0.45 } };
+let distanceSinceLastSpawn = 0, lastSpawnZ = -80;
+
+function getRequiredGap() { const config = Z_GAP_CONFIG[difficulty]; const progress = Math.min(score / 5000, 1); return config.min + (config.max - config.min) * (1 - progress * 0.5) + Math.random() * (config.max - config.min); }
+function selectPattern() { const lanes = LANE_COUNT[difficulty]; const patternKey = difficulty + '_' + lanes; const patterns = OBSTACLE_PATTERNS[patternKey] || OBSTACLE_PATTERNS.easy_3; return patterns[Math.floor(Math.random() * patterns.length)]; }
+function adjustPatternForSafeLane(pattern, safeLanes) { const adjusted = [...pattern]; const safeIndices = safeLanes.map(l => Math.round(l)).filter((v, i, a) => a.indexOf(v) === i); for (const safeIdx of safeIndices) { if (adjusted[safeIdx] === 1) { for (let i = 0; i < adjusted.length; i++) { if (adjusted[i] === 0 && !safeIndices.includes(i)) { adjusted[safeIdx] = 0; adjusted[i] = 1; break; } } } } return adjusted; }
+function getSafeLanes() { return [Math.round(playerLane), targetLane]; }
+function createObstacleAt(lane, type, z) { const obs = createObstacle(type); obs.position.set(getLaneX(lane), type === 'laser' ? 0.3 : 0.9, z); obs.castShadow = true; obs.userData.lane = lane; obs.userData.type = type; scene.add(obs); obstacles.push(obs); return obs; }
+function createCoinAt(lane, z) { const coin = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.14, 8, 24), new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffaa00, emissiveIntensity: 0.7, metalness: 1, roughness: 0.1 })); coin.position.set(getLaneX(lane), 1.2, z); coin.userData.collected = false; scene.add(coin); coinItems.push(coin); }
+// =========================================
+
 let soundOn = true, audioCtx = null;
 function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
 function tone(freq, dur, type = 'sine', vol = 0.1) {
@@ -256,39 +274,36 @@ function setLevel(n) {
 
 function spawnObstacles() {
   const lanes = LANE_COUNT[difficulty];
-  const occupied = [];
-  const numObs = Math.floor(Math.random() * (lanes - 1)) + 1;
-  
-  while(occupied.length < numObs) {
-    const lane = Math.floor(Math.random() * lanes);
-    if(!occupied.includes(lane)) occupied.push(lane);
-  }
-  
+  let pattern = selectPattern();
+  const safeLanes = getSafeLanes();
+  pattern = adjustPatternForSafeLane(pattern, safeLanes);
+  const obsTypes = getObstacleTypes();
+  const config = DIFFICULTY_CONFIG[difficulty];
+  const z = -80 - Math.random() * 15;
+
   for(let i = 0; i < lanes; i++) {
-    if(occupied.includes(i)) {
-      const obs = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.6, 1.6), new THREE.MeshStandardMaterial({ color: 0xff2255, emissive: 0xff0044, emissiveIntensity: 0.6, metalness: 0.7, roughness: 0.3 }));
-      obs.position.set(getLaneX(i), 0.9, -150 - Math.random() * 60);
-      obs.castShadow = true;
-      obs.userData.lane = i;
-      scene.add(obs);
-      obstacles.push(obs);
+    if(pattern[i] === 1) {
+      const type = obsTypes[Math.floor(Math.random() * obsTypes.length)];
+      createObstacleAt(i, type, z);
     }
   }
-  
-  if(Math.random() < 0.65) {
+
+  if(Math.random() < config.coinChance) {
+    const freeLanes = [];
+    for(let i = 0; i < lanes; i++) { if(pattern[i] === 0) freeLanes.push(i); }
     let coinLane;
-    do { coinLane = Math.floor(Math.random() * lanes); } while(occupied.includes(coinLane));
-    const coin = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.14, 8, 24), new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffaa00, emissiveIntensity: 0.7, metalness: 1, roughness: 0.1 }));
-    coin.position.set(getLaneX(coinLane), 1.2, -150 - Math.random() * 60);
-    coin.userData.collected = false;
-    scene.add(coin);
-    coinItems.push(coin);
+    const safeFreeLanes = freeLanes.filter(l => safeLanes.includes(Math.round(l)));
+    if(safeFreeLanes.length > 0) { coinLane = safeFreeLanes[Math.floor(Math.random() * safeFreeLanes.length)]; }
+    else if(freeLanes.length > 0) { coinLane = freeLanes[Math.floor(Math.random() * freeLanes.length)]; }
+    if(coinLane !== undefined) { createCoinAt(coinLane, z + 8 + Math.random() * 5); }
   }
+  lastSpawnZ = z;
 }
 
 function startGame() {
   playClickSound();
   score = 0; coins = 0; distance = 0; levelScore = 0; lastLevelScore = 0;
+  distanceSinceLastSpawn = 0; lastSpawnZ = -80;
   playerLane = Math.floor(LANE_COUNT[difficulty] / 2);
   targetLane = playerLane;
   
@@ -298,10 +313,10 @@ function startGame() {
   createDecorations();
   
   if(gameMode === 'story') setLevel(0); else setLevel(Math.floor(Math.random() * LEVELS.length));
-  
-  for(let i = 0; i < 5; i++) {
+
+  for(let i = 0; i < 8; i++) {
     spawnObstacles();
-    const offset = i * 100 + Math.random() * 30;
+    const offset = i * 30 + Math.random() * 15;
     obstacles.forEach(o => { o.position.z -= offset; });
     coinItems.forEach(c => { c.position.z -= offset; });
   }
@@ -389,13 +404,33 @@ function animate() {
     player.rotation.z = (targetLane - playerLane) * 0.45;
     player.position.y = Math.sin(Date.now() * 0.003) * 0.1;
     
-    obstacles.forEach(o => { o.position.z += speed; o.rotation.y += 0.025; });
-    obstacles.forEach(o => { if(o.position.z > 30) { o.position.z = -150 - Math.random() * 50; o.userData.lane = Math.floor(Math.random() * LANE_COUNT[difficulty]); o.position.x = getLaneX(o.userData.lane); } });
-    
+    obstacles.forEach(o => {
+      o.position.z += speed;
+      o.rotation.y += o.userData.type === 'cone' ? 0.04 : (o.userData.type === 'laser' ? 0.08 : 0.025);
+    });
+    obstacles.forEach(o => {
+      if(o.position.z > 30) {
+        const lanes = LANE_COUNT[difficulty];
+        const otherObstacles = obstacles.filter(obs => obs !== o && obs.position.z > -80);
+        const safeLanes = getSafeLanes();
+        const occupied = otherObstacles.map(obs => obs.userData.lane);
+        const availableLanes = [];
+        for(let l = 0; l < lanes; l++) { if(!occupied.includes(l)) availableLanes.push(l); }
+        let newLane;
+        const safeAvailable = availableLanes.filter(l => safeLanes.includes(Math.round(l)));
+        if(safeAvailable.length > 0) { newLane = safeAvailable[Math.floor(Math.random() * safeAvailable.length)]; }
+        else if(availableLanes.length > 0) { newLane = availableLanes[Math.floor(Math.random() * availableLanes.length)]; }
+        if(newLane !== undefined) { o.userData.lane = newLane; o.position.x = getLaneX(newLane); }
+        o.position.z = -80 - Math.random() * 15;
+      }
+    });
+
     coinItems.forEach(c => { c.position.z += speed; c.rotation.z += 0.12; });
     coinItems = coinItems.filter(c => { if(c.position.z > 30) { scene.remove(c); return false; } return true; });
-    
-    if(Math.random() < 0.028) spawnObstacles();
+
+    // 距离追踪控制生成
+    distanceSinceLastSpawn += speed;
+    if(distanceSinceLastSpawn >= getRequiredGap()) { spawnObstacles(); distanceSinceLastSpawn = 0; }
     
     if(checkCollision()) { gameOver(); return; }
     checkCoinCollection();

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>JS Test</title>
+</head>
+<body>
+<div id="readyGoOverlay"><span class="ready-text ready">READY</span><span class="ready-text go">GO!</span></div>
+<div id="testOutput"></div>
+<script>
+// 模拟 playReadyGo 函数
+function playReadyGo(callback) {
+  const overlay = document.getElementById('readyGoOverlay');
+  const readyText = overlay.querySelector('.ready');
+  const goText = overlay.querySelector('.go');
+
+  if (!overlay) { log('ERROR: overlay not found'); return; }
+  if (!readyText) { log('ERROR: readyText not found'); return; }
+  if (!goText) { log('ERROR: goText not found'); return; }
+
+  log('All elements found');
+  overlay.classList.remove('show');
+  readyText.classList.remove('ready');
+  goText.classList.remove('go');
+  void overlay.offsetWidth;
+  overlay.classList.add('show');
+  readyText.classList.add('ready');
+  goText.classList.add('go');
+  log('Animation started');
+  setTimeout(() => {
+    overlay.classList.remove('show');
+    log('Animation ended, calling callback');
+    if(callback) callback();
+  }, 2000);
+}
+
+function log(msg) {
+  document.getElementById('testOutput').innerHTML += msg + '<br>';
+  console.log(msg);
+}
+
+function startGame() {
+  log('startGame called');
+  playReadyGo(() => {
+    log('Callback executed - game should start now');
+  });
+}
+
+log('Page loaded, testing...');
+startGame();
+</script>
+</body>
+</html>

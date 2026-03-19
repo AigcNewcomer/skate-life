@@ -97,6 +97,31 @@ let distanceSinceLastSpawn = 0, lastSpawnZ = -80;
 
 function getRequiredGap() { const config = Z_GAP_CONFIG[difficulty]; const progress = Math.min(score / 5000, 1); return config.min + (config.max - config.min) * (1 - progress * 0.5) + Math.random() * (config.max - config.min); }
 function selectPattern() { const lanes = LANE_COUNT[difficulty]; const patternKey = difficulty + '_' + lanes; const patterns = OBSTACLE_PATTERNS[patternKey] || OBSTACLE_PATTERNS.easy_3; return patterns[Math.floor(Math.random() * patterns.length)]; }
+function getObstacleTypes() { return ['cone', 'laser']; }
+function createObstacle(type) {
+  if (type === 'cone') {
+    return new THREE.Mesh(
+      new THREE.ConeGeometry(0.5, 1.5, 8),
+      new THREE.MeshStandardMaterial({ color: 0xff4444, emissive: 0xff0000, emissiveIntensity: 0.3 })
+    );
+  } else if (type === 'laser') {
+    const group = new THREE.Group();
+    const beam = new THREE.Mesh(
+      new THREE.BoxGeometry(0.15, 2, 0.15),
+      new THREE.MeshBasicMaterial({ color: 0x00ffff })
+    );
+    beam.position.y = 1;
+    group.add(beam);
+    const glow = new THREE.Mesh(
+      new THREE.SphereGeometry(0.3, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.5 })
+    );
+    glow.position.y = 1;
+    group.add(glow);
+    return group;
+  }
+  return new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x888888 }));
+}
 function adjustPatternForSafeLane(pattern, safeLanes) { const adjusted = [...pattern]; const safeIndices = safeLanes.map(l => Math.round(l)).filter((v, i, a) => a.indexOf(v) === i); for (const safeIdx of safeIndices) { if (adjusted[safeIdx] === 1) { for (let i = 0; i < adjusted.length; i++) { if (adjusted[i] === 0 && !safeIndices.includes(i)) { adjusted[safeIdx] = 0; adjusted[i] = 1; break; } } } } return adjusted; }
 function getSafeLanes() { return [Math.round(playerLane), targetLane]; }
 function createObstacleAt(lane, type, z) { const obs = createObstacle(type); obs.position.set(getLaneX(lane), type === 'laser' ? 0.3 : 0.9, z); obs.castShadow = true; obs.userData.lane = lane; obs.userData.type = type; scene.add(obs); obstacles.push(obs); return obs; }

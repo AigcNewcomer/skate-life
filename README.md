@@ -18,7 +18,7 @@
 
 ## 平台支持
 
-- ✅ **Web 端**: [https://skate-life.pages.dev/](https://skate-life.pages.dev/)
+- ⏳ **Web 端**: (暂未部署，直接打开 `index.html` 即可运行)
 - 🔜 **Android**: 计划中
 
 ## 技术

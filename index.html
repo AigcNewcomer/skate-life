@@ -139,12 +139,12 @@ function playUpSound() { tone(523, 0.08); setTimeout(() => tone(659, 0.08), 60);
 function playClickSound() { tone(440, 0.02, 'sine', 0.03); }
 function toggleSound() { soundOn = !soundOn; document.querySelector('.soundBtn').textContent = soundOn ? '🔊' : '🔇'; if(soundOn) initAudio(); }
 
-let gameMode = 'story', difficulty = 'medium', currentLevel = 0, gameRunning = false;
+let gameMode = 'story', difficulty = 'medium', currentLevel = 0, gameRunning = false, frameId = null;
 let score = 0, coins = 0, distance = 0, levelScore = 0, lastLevelScore = 0;
 let playerLane = 1, targetLane = 1;
 let obstacles = [], coinItems = [], decorations = [];
-let highScore = parseInt(localStorage.getItem('sl_hs') || '0');
-let maxLevel = parseInt(localStorage.getItem('sl_lv') || '0');
+let highScore = parseInt(localStorage.getItem('sl_hs')) || 0;
+let maxLevel = parseInt(localStorage.getItem('sl_lv')) || 0;
 
 const canvas = document.getElementById('game');
 const scene = new THREE.Scene();
@@ -352,7 +352,9 @@ function startGame() {
 }
 
 function gameOver() {
-  gameRunning = false; playHitSound();
+  gameRunning = false;
+  if(frameId) { cancelAnimationFrame(frameId); frameId = null; }
+  playHitSound();
   document.getElementById('gameUI').classList.remove('show');
   document.getElementById('startScreen').classList.remove('hidden');
   if(score > highScore) { highScore = score; localStorage.setItem('sl_hs', highScore); }
@@ -419,7 +421,7 @@ document.addEventListener('touchstart', e => {
 });
 
 function animate() {
-  requestAnimationFrame(animate);
+  frameId = requestAnimationFrame(animate);
   
   if(gameRunning) {
     const speed = GAME_SPEED[difficulty] + (gameMode === 'endless' ? score * 0.00005 : 0);

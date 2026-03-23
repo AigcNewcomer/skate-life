@@ -18,13 +18,18 @@ function playReadyGo(callback) {
   if (!goText) { log('ERROR: goText not found'); return; }
 
   log('All elements found');
+  // 先移除所有动画 class
   overlay.classList.remove('show');
   readyText.classList.remove('ready');
   goText.classList.remove('go');
+  // 强制浏览器重排以重置动画状态
   void overlay.offsetWidth;
-  overlay.classList.add('show');
-  readyText.classList.add('ready');
-  goText.classList.add('go');
+  // 使用 setTimeout 确保移除和添加在不同帧执行
+  setTimeout(() => {
+    overlay.classList.add('show');
+    readyText.classList.add('ready');
+    goText.classList.add('go');
+  }, 0);
   log('Animation started');
   setTimeout(() => {
     overlay.classList.remove('show');

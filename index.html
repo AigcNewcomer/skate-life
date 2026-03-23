@@ -327,7 +327,7 @@ function setLevel(n) {
   scene.background = new THREE.Color(lv.bg);
   scene.fog.color = new THREE.Color(lv.fog);
   ground.material.color.setHex(lv.ground);
-  ground.material.emissive = new THREE.Color(lv.accent);
+  ground.material.emissive.setHex(lv.accent);
   ground.material.emissiveIntensity = 0.25;
   document.getElementById('levelDisplay').textContent = gameMode === 'endless' ? '⚡ 极限模式' : lv.name;
 }

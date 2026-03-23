@@ -98,12 +98,20 @@ let distanceSinceLastSpawn = 0, lastSpawnZ = -80;
 function getRequiredGap() { const config = Z_GAP_CONFIG[difficulty]; const progress = Math.min(score / 5000, 1); return config.min + (config.max - config.min) * (1 - progress * 0.5) + Math.random() * (config.max - config.min); }
 function selectPattern() { const lanes = LANE_COUNT[difficulty]; const patternKey = difficulty + '_' + lanes; const patterns = OBSTACLE_PATTERNS[patternKey] || OBSTACLE_PATTERNS.easy_3; return patterns[Math.floor(Math.random() * patterns.length)]; }
 function getObstacleTypes() { return ['cone', 'laser']; }
-function createObstacle(type) {
+
+// ========== 障碍物对象池（优化性能） ==========
+const POOL_CONFIG = { maxSize: 20, cone: [], laser: [] };
+
+function getObstacleFromPool(type) {
+  const pool = POOL_CONFIG[type];
+  if(pool && pool.length > 0) {
+    return pool.pop();
+  }
+  // 池为空或类型不存在，创建新对象
   if (type === 'cone') {
-    return new THREE.Mesh(
-      new THREE.ConeGeometry(0.5, 1.5, 8),
-      new THREE.MeshStandardMaterial({ color: 0xff4444, emissive: 0xff0000, emissiveIntensity: 0.3 })
-    );
+    const coneGeo = new THREE.ConeGeometry(0.5, 1.5, 8);
+    const coneMat = new THREE.MeshStandardMaterial({ color: 0xff4444, emissive: 0xff0000, emissiveIntensity: 0.3 });
+    return new THREE.Mesh(coneGeo, coneMat);
   } else if (type === 'laser') {
     const group = new THREE.Group();
     const beam = new THREE.Mesh(
@@ -122,6 +130,21 @@ function createObstacle(type) {
   }
   return new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x888888 }));
 }
+
+function returnObstacleToPool(obs) {
+  if(!obs || !obs.userData || !obs.userData.type) return;
+  const type = obs.userData.type;
+  if(POOL_CONFIG[type].length < POOL_CONFIG.maxSize) {
+    scene.remove(obs);
+    POOL_CONFIG[type].push(obs);
+  } else {
+    // 池已满，直接 dispose
+    disposeDecoration(obs);
+  }
+}
+
+function createObstacle(type) { return getObstacleFromPool(type); }
+// =========================================
 function adjustPatternForSafeLane(pattern, safeLanes) { const adjusted = [...pattern]; const safeIndices = safeLanes.map(l => Math.round(l)).filter((v, i, a) => a.indexOf(v) === i); for (const safeIdx of safeIndices) { if (adjusted[safeIdx] === 1) { for (let i = 0; i < adjusted.length; i++) { if (adjusted[i] === 0 && !safeIndices.includes(i)) { adjusted[safeIdx] = 0; adjusted[i] = 1; break; } } } } return adjusted; }
 function getSafeLanes() { return [Math.round(playerLane), targetLane]; }
 function createObstacleAt(lane, type, z) { const obs = createObstacle(type); obs.position.set(getLaneX(lane), type === 'laser' ? 0.3 : 0.9, z); obs.castShadow = true; obs.userData.lane = lane; obs.userData.type = type; scene.add(obs); obstacles.push(obs); return obs; }
@@ -163,7 +186,7 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.2;
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-const sun = new THREE.DirectionalLight(0xffffff, 1.5); sun.position.set(15, 30, 20); sun.castShadow = true; sun.shadow.mapSize.width = 2048; sun.shadow.mapSize.height = 2048; sun.shadow.camera.near = 1; sun.shadow.camera.far = 80; sun.shadow.camera.left = -30; sun.shadow.camera.right = 30; sun.shadow.camera.top = 30; sun.shadow.camera.bottom = -30; scene.add(sun);
+const sun = new THREE.DirectionalLight(0xffffff, 1.5); sun.position.set(15, 30, 20); sun.castShadow = true; sun.shadow.mapSize.width = 1024; sun.shadow.mapSize.height = 1024; sun.shadow.camera.near = 1; sun.shadow.camera.far = 80; sun.shadow.camera.left = -30; sun.shadow.camera.right = 30; sun.shadow.camera.top = 30; sun.shadow.camera.bottom = -30; scene.add(sun);
 
 const neonL1 = new THREE.PointLight(0x00ffff, 3, 80); neonL1.position.set(-15, 15, -10); scene.add(neonL1);
 const neonL2 = new THREE.PointLight(0xff00ff, 3, 80); neonL2.position.set(15, 15, -10); scene.add(neonL2);
@@ -216,8 +239,20 @@ const rightLeg = new THREE.Mesh(legGeo, pantsMat); rightLeg.position.set(0.28, 0
 
 player.position.y = 0; scene.add(player);
 
+// 释放装饰物 GPU 资源（防止内存泄漏）
+function disposeDecoration(d) {
+  if(!d) return;
+  d.traverse(child => {
+    if(child.geometry) child.geometry.dispose();
+    if(child.material) {
+      if(Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+      else child.material.dispose();
+    }
+  });
+  scene.remove(d);
+}
 function createDecorations() {
-  decorations.forEach(d => { if(d) scene.remove(d); });
+  decorations.forEach(d => disposeDecoration(d));
   decorations = [];
   
   const sides = [-10, 10];
@@ -331,8 +366,10 @@ function startGame() {
   distanceSinceLastSpawn = 0; lastSpawnZ = -80;
   playerLane = Math.floor(LANE_COUNT[difficulty] / 2);
   targetLane = playerLane;
-  
-  obstacles.forEach(o => scene.remove(o)); obstacles = [];
+
+  // 归还障碍物到对象池复用
+  obstacles.forEach(o => returnObstacleToPool(o));
+  obstacles = [];
   coinItems.forEach(c => scene.remove(c)); coinItems = [];
   
   createDecorations();

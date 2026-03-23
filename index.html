@@ -400,11 +400,75 @@ function gameOver() {
   document.getElementById('levelProgressDisplay').textContent = maxLevel;
 }
 
+// ========== 碰撞检测系统（基于圆形碰撞体） ==========
+// 玩家滑板碰撞半径：滑板宽1.6，取宽度一半更精确
+const PLAYER_SKATE_RADIUS = 0.85;
+// 障碍物碰撞半径配置
+const OBSTACLE_COLLIDER = {
+  cone: { radius: 0.55, height: 1.5 },      // 锥形体
+  laser: { radius: 0.35, beamY: 1.0, beamHeight: 2.0 }  // 激光束
+};
+
+/**
+ * 圆形碰撞检测
+ * @param {number} x1 - 对象1 x坐标
+ * @param {number} z1 - 对象1 z坐标
+ * @param {number} r1 - 对象1 碰撞半径
+ * @param {number} x2 - 对象2 x坐标
+ * @param {number} z2 - 对象2 z坐标
+ * @param {number} r2 - 对象2 碰撞半径
+ * @returns {boolean} 是否碰撞
+ */
+function circleCollision(x1, z1, r1, x2, z2, r2) {
+  const dx = x1 - x2;
+  const dz = z1 - z2;
+  const distSq = dx * dx + dz * dz;
+  const radiusSum = r1 + r2;
+  return distSq < radiusSum * radiusSum;
+}
+
+/**
+ * 激光碰撞检测（考虑激光高度）
+ * 激光束在玩家腿部高度，玩家站立即受伤
+ */
+function checkLaserCollision(playerX, laserX, laserZ, laserRadius) {
+  const horizontalDist = Math.sqrt(
+    (playerX - laserX) ** 2 + (0 - laserZ) ** 2
+  );
+  // 玩家在激光束水平范围内即碰撞（激光会照射腿部）
+  return horizontalDist < PLAYER_SKATE_RADIUS + laserRadius;
+}
+
 function checkCollision() {
+  const playerX = player.position.x;
   const playerZ = 0;
-  for(const obs of obstacles) {
-    const dz = Math.abs(obs.position.z - playerZ);
-    if(obs.userData.lane === Math.round(playerLane) && dz < 4.5) return true;
+
+  for (const obs of obstacles) {
+    const type = obs.userData.type;
+    const obsX = obs.position.x;
+    const obsZ = obs.position.z;
+
+    if (type === 'cone') {
+      // 锥形障碍物：使用圆形碰撞
+      const collider = OBSTACLE_COLLIDER.cone;
+      if (circleCollision(playerX, playerZ, PLAYER_SKATE_RADIUS, obsX, obsZ, collider.radius)) {
+        return true;
+      }
+    } else if (type === 'laser') {
+      // 激光障碍物：圆形碰撞 + 高度检测
+      const collider = OBSTACLE_COLLIDER.laser;
+      if (circleCollision(playerX, playerZ, PLAYER_SKATE_RADIUS, obsX, obsZ, collider.radius)) {
+        // 激光束在玩家腿部高度（y < 1.5）时碰撞
+        if (collider.beamY < 1.5) {
+          return true;
+        }
+      }
+    } else {
+      // 默认障碍物：简化圆形检测
+      if (circleCollision(playerX, playerZ, PLAYER_SKATE_RADIUS, obsX, obsZ, 0.5)) {
+        return true;
+      }
+    }
   }
   return false;
 }

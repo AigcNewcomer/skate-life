@@ -473,6 +473,17 @@ function checkCollision() {
   return false;
 }
 
+// 释放金币 GPU 资源
+function disposeCoin(coin) {
+  if (!coin) return;
+  if (coin.geometry) coin.geometry.dispose();
+  if (coin.material) {
+    if (Array.isArray(coin.material)) coin.material.forEach(m => m.dispose());
+    else coin.material.dispose();
+  }
+  scene.remove(coin);
+}
+
 function checkCoinCollection() {
   const playerZ = 0;
   for(let i = coinItems.length - 1; i >= 0; i--) {
@@ -481,7 +492,7 @@ function checkCoinCollection() {
     const dz = Math.abs(coin.position.z - playerZ);
     if(dz < 2.5) {
       coin.userData.collected = true;
-      scene.remove(coin);
+      disposeCoin(coin);  // 释放 GPU 资源
       coinItems.splice(i, 1);
       coins++;
       score += 10;
@@ -521,8 +532,18 @@ document.addEventListener('touchstart', e => {
   document.addEventListener('touchend', end);
 });
 
-function animate() {
+// 帧率控制
+const TARGET_FPS = 60;
+const FRAME_TIME = 1000 / TARGET_FPS;
+let lastFrameTime = 0;
+
+function animate(timestamp) {
   frameId = requestAnimationFrame(animate);
+  
+  // 帧率锁定：只在达到目标帧率时才渲染
+  const deltaTime = timestamp - lastFrameTime;
+  if (deltaTime < FRAME_TIME) return;
+  lastFrameTime = timestamp - (deltaTime % FRAME_TIME);
   
   if(gameRunning) {
     const speed = GAME_SPEED[difficulty] + (gameMode === 'endless' ? score * 0.00005 : 0);

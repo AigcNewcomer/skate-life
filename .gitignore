@@ -25,3 +25,4 @@ dist-ssr
 
 # 截图
 screenshots/
+*.png

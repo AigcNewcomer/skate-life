@@ -40,11 +40,21 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font
 .levelProgress { position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%); width: min(450px, 65%); height: 12px; background: rgba(255,255,255,0.2); border-radius: 6px; overflow: hidden; }
 .levelProgressBar { height: 100%; background: linear-gradient(90deg, #0ff, #f0f); border-radius: 6px; transition: width 0.3s; }
 .soundBtn { position: fixed; top: 22px; right: 22px; width: 55px; height: 55px; border-radius: 50%; background: rgba(0,0,0,0.75); border: 1px solid rgba(0,255,255,0.4); color: #0ff; font-size: 1.5rem; cursor: pointer; z-index: 60; }
+.pauseBtn { position: fixed; top: 22px; right: 85px; width: 55px; height: 55px; border-radius: 50%; background: rgba(0,0,0,0.75); border: 1px solid rgba(255,0,255,0.4); color: #f0f; font-size: 1.5rem; cursor: pointer; z-index: 60; display: none; }
+.pauseBtn.show { display: block; }
+.virtualBtn { position: fixed; bottom: 30px; width: 80px; height: 80px; border-radius: 50%; background: rgba(0,255,255,0.3); border: 2px solid rgba(0,255,255,0.6); color: #fff; font-size: 2rem; cursor: pointer; z-index: 60; display: none; user-select: none; -webkit-user-select: none; }
+.virtualBtn.show { display: flex; align-items: center; justify-content: center; }
+.virtualBtn:active { background: rgba(0,255,255,0.5); transform: scale(0.95); }
+.virtualBtn.left { left: 30px; }
+.virtualBtn.right { right: 30px; }
 </style>
 </head>
 <body>
 <canvas id="game"></canvas>
 <button class="soundBtn" onclick="toggleSound()">🔊</button>
+<button class="pauseBtn" id="pauseBtn" onclick="togglePause()">⏸</button>
+<button class="virtualBtn left" id="leftBtn" ontouchstart="virtualLeft()">◀</button>
+<button class="virtualBtn right" id="rightBtn" ontouchstart="virtualRight()">▶</button>
 
 <div id="startScreen" class="screen">
   <div class="title">🛹 滑板人生</div>
@@ -74,14 +84,22 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font
 <script>
 const LANE_COUNT = { easy: 3, medium: 4, hard: 5 };
 const LEVELS = [
-  { name: '第 1 关', bg: 0x1a0a15, ground: 0xff69b4, accent: 0xff1493, fog: 0x1a0a15 },
-  { name: '第 2 关', bg: 0x1a1005, ground: 0xff6347, accent: 0xffd700, fog: 0x1a1005 },
-  { name: '第 3 关', bg: 0x051005, ground: 0x228b22, accent: 0x90ee90, fog: 0x051005 },
-  { name: '第 4 关', bg: 0x0a0a0a, ground: 0x444444, accent: 0xaaaaaa, fog: 0x0a0a0a },
-  { name: '第 5 关', bg: 0x000020, ground: 0x4444ff, accent: 0xff00ff, fog: 0x000020 },
-  { name: '第 6 关', bg: 0x051520, ground: 0x88ddff, accent: 0x00ffff, fog: 0x051520 },
-  { name: '第 7 关', bg: 0x1a1000, ground: 0xff6600, accent: 0xff3300, fog: 0x1a1000 },
-  { name: '第 8 关', bg: 0x0a0020, ground: 0x00ffff, accent: 0xff00ff, fog: 0x0a0020 }
+  // 第1关：粉色浪漫
+  { name: '第 1 关 粉色浪漫', bg: 0x1a0a15, ground: 0xff69b4, accent: 0xff1493, fog: 0x1a0a15, sky: 0xff69b4, decor: 0xff69b4, obstacle: 0xff1493, particle: 0xff69b4 },
+  // 第2关：热带夏日
+  { name: '第 2 关 热带夏日', bg: 0x1a1005, ground: 0xff6347, accent: 0xffd700, fog: 0x1a1005, sky: 0xff8c00, decor: 0x228b22, obstacle: 0xff6347, particle: 0xffd700 },
+  // 第3关：森林氧吧
+  { name: '第 3 关 森林氧吧', bg: 0x051005, ground: 0x228b22, accent: 0x90ee90, fog: 0x051005, sky: 0x228b22, decor: 0x006400, obstacle: 0x32cd32, particle: 0x90ee90 },
+  // 第4关：极简黑白
+  { name: '第 4 关 极简黑白', bg: 0x0a0a0a, ground: 0x444444, accent: 0xaaaaaa, fog: 0x0a0a0a, sky: 0x222222, decor: 0x666666, obstacle: 0xffffff, particle: 0xcccccc },
+  // 第5关：星空宇宙
+  { name: '第 5 关 星空宇宙', bg: 0x000020, ground: 0x4444ff, accent: 0xff00ff, fog: 0x000020, sky: 0x000040, decor: 0x4444ff, obstacle: 0xff00ff, particle: 0xffffff },
+  // 第6关：冰雪奇缘
+  { name: '第 6 关 冰雪奇缘', bg: 0x051520, ground: 0x88ddff, accent: 0x00ffff, fog: 0x051520, sky: 0xaaddff, decor: 0xffffff, obstacle: 0x00ced1, particle: 0xe0ffff },
+  // 第7关：沙漠黄昏
+  { name: '第 7 关 沙漠黄昏', bg: 0x1a1000, ground: 0xff6600, accent: 0xff3300, fog: 0x1a1000, sky: 0xff4500, decor: 0xdaa520, obstacle: 0xff8c00, particle: 0xffd700 },
+  // 第8关：赛博朋克
+  { name: '第 8 关 赛博朋克', bg: 0x0a0020, ground: 0x00ffff, accent: 0xff00ff, fog: 0x0a0020, sky: 0x0a0020, decor: 0xff00ff, obstacle: 0x00ffff, particle: 0xff00ff }
 ];
 const GAME_SPEED = { easy: 0.15, medium: 0.28, hard: 0.45 };
 
@@ -151,31 +169,155 @@ function createObstacleAt(lane, type, z) { const obs = createObstacle(type); obs
 function createCoinAt(lane, z) { const coin = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.14, 8, 24), new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffaa00, emissiveIntensity: 0.7, metalness: 1, roughness: 0.1 })); coin.position.set(getLaneX(lane), 1.2, z); coin.userData.collected = false; scene.add(coin); coinItems.push(coin); }
 // =========================================
 
-let soundOn = true, audioCtx = null;
-function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+let soundOn = true, audioCtx = null, bgmGain = null, bgmOsc = null, bgmPlaying = false;
+function initAudio() {
+  if(!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // 背景音乐音量控制
+    bgmGain = audioCtx.createGain();
+    bgmGain.gain.value = 0.08;
+    bgmGain.connect(audioCtx.destination);
+  }
+}
+
+// 背景音乐 - 合成赛博朋克风格节拍
+function startBGM() {
+  if(!soundOn || !audioCtx || bgmPlaying) return;
+  bgmPlaying = true;
+  const bpm = 128;
+  const beatLen = 60 / bpm;
+  let beatCount = 0;
+
+  function playBeat() {
+    if(!bgmPlaying || !soundOn) return;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.connect(g);
+    g.connect(bgmGain);
+
+    // 4/4 拍节奏
+    if(beatCount % 4 === 0) {
+      // 强拍 - 低音
+      osc.frequency.value = 55;
+      g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + beatLen * 0.8);
+    } else if(beatCount % 4 === 2) {
+      // 弱拍
+      osc.frequency.value = 73.42;
+      g.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + beatLen * 0.5);
+    } else {
+      // 其他拍子 - 高音
+      osc.frequency.value = 110;
+      g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + beatLen * 0.3);
+    }
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + beatLen);
+    beatCount++;
+    setTimeout(playBeat, beatLen * 1000);
+  }
+  playBeat();
+}
+
+function stopBGM() {
+  bgmPlaying = false;
+}
+
 function tone(freq, dur, type = 'sine', vol = 0.1) {
   if(!soundOn || !audioCtx) return;
   try { const osc = audioCtx.createOscillator(); const g = audioCtx.createGain(); osc.type = type; osc.frequency.value = freq; g.gain.setValueAtTime(vol, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur); osc.connect(g); g.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + dur); } catch(e) {} }
 function playCoinSound() { tone(880, 0.05); setTimeout(() => tone(1100, 0.08), 30); }
-function playHitSound() { tone(80, 0.4, 'sawtooth', 0.08); }
+function playHitSound() { tone(80, 0.4, 'sawtooth', 0.08); tone(60, 0.5, 'sawtooth', 0.05); }
 function playUpSound() { tone(523, 0.08); setTimeout(() => tone(659, 0.08), 60); setTimeout(() => tone(784, 0.15), 120); }
 function playClickSound() { tone(440, 0.02, 'sine', 0.03); }
-function toggleSound() { soundOn = !soundOn; document.querySelector('.soundBtn').textContent = soundOn ? '🔊' : '🔇'; if(soundOn) initAudio(); }
+// 滑行音效
+function playSlideSound() {
+  if(!soundOn || !audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.value = 200 + Math.random() * 100;
+  g.gain.setValueAtTime(0.02, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+  osc.connect(g);
+  g.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.1);
+}
+// 关卡通过音效
+function playLevelUpSound() {
+  const notes = [523, 659, 784, 1047];
+  notes.forEach((n, i) => setTimeout(() => tone(n, 0.15, 'sine', 0.12), i * 100));
+}
+// 加速音效
+function playSpeedSound() {
+  if(!soundOn || !audioCtx) return;
+  for(let i = 0; i < 3; i++) {
+    setTimeout(() => tone(300 + i * 150, 0.08, 'sawtooth', 0.03), i * 40);
+  }
+}
+function toggleSound() {
+  soundOn = !soundOn;
+  document.querySelector('.soundBtn').textContent = soundOn ? '🔊' : '🔇';
+  if(soundOn) { initAudio(); startBGM(); }
+  else { stopBGM(); }
+}
+function togglePause() {
+  if(!gameRunning) return;
+  paused = !paused;
+  document.getElementById('pauseBtn').textContent = paused ? '▶' : '⏸';
+  if(paused) { stopBGM(); } else { if(soundOn) startBGM(); }
+}
+function virtualLeft() { if(!gameRunning || paused) return; const max = LANE_COUNT[difficulty] - 1; targetLane = Math.max(0, targetLane - 1); playSlideSound(); }
+function virtualRight() { if(!gameRunning || paused) return; const max = LANE_COUNT[difficulty] - 1; targetLane = Math.min(max, targetLane + 1); playSlideSound(); }
 
-let gameMode = 'story', difficulty = 'medium', currentLevel = 0, gameRunning = false, frameId = null;
+let gameMode = 'story', difficulty = 'medium', currentLevel = 0, gameRunning = false, paused = false, frameId = null;
 let score = 0, coins = 0, distance = 0, levelScore = 0, lastLevelScore = 0;
 let playerLane = 1, targetLane = 1;
 let obstacles = [], coinItems = [], decorations = [];
-let highScore = parseInt(localStorage.getItem('sl_hs')) || 0;
-let maxLevel = parseInt(localStorage.getItem('sl_lv')) || 0;
+// ========== 增强存档系统 ==========
+const SAVE_KEYS = { highScore: 'sl_hs', maxLevel: 'sl_lv', totalCoins: 'sl_tc', totalTime: 'sl_tt', sound: 'sl_sd', difficultyBest: 'sl_db' };
+function loadSave(key, def = 0) {
+  try { return JSON.parse(localStorage.getItem(key)) || def; } catch { return def; }
+}
+function saveData(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+let highScore = loadSave(SAVE_KEYS.highScore, 0);
+let maxLevel = loadSave(SAVE_KEYS.maxLevel, 0);
+let totalCoins = loadSave(SAVE_KEYS.totalCoins, 0);
+let totalTime = loadSave(SAVE_KEYS.totalTime, 0);
+// 每个难度的最佳分数
+let difficultyBest = loadSave(SAVE_KEYS.difficultyBest, { easy: 0, medium: 0, hard: 0 });
+
+function updateStats() {
+  // 更新界面显示
+  document.getElementById('highScoreDisplay').textContent = highScore;
+  document.getElementById('levelProgressDisplay').textContent = maxLevel;
+  // 解锁极限模式
+  if(maxLevel >= 7) document.getElementById('modeEndless').classList.remove('locked');
+}
 
 const canvas = document.getElementById('game');
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0x1a0a15, 30, 150);
 
 const camera = new THREE.PerspectiveCamera(65, window.innerWidth/window.innerHeight, 0.1, 500);
-camera.position.set(0, 7, 12);
+camera.position.set(0, 6, 14);
 camera.lookAt(0, 1, -20);
+
+// 摄像机摇晃效果
+let cameraShake = 0;
+function updateCameraShake() {
+  if(cameraShake > 0) {
+    camera.position.x = (Math.random() - 0.5) * cameraShake * 0.3;
+    camera.position.y = 6 + (Math.random() - 0.5) * cameraShake * 0.2;
+    cameraShake *= 0.9;
+    if(cameraShake < 0.01) { cameraShake = 0; camera.position.x = 0; camera.position.y = 6; }
+  }
+}
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -186,7 +328,20 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.2;
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-const sun = new THREE.DirectionalLight(0xffffff, 1.5); sun.position.set(15, 30, 20); sun.castShadow = true; sun.shadow.mapSize.width = 1024; sun.shadow.mapSize.height = 1024; sun.shadow.camera.near = 1; sun.shadow.camera.far = 80; sun.shadow.camera.left = -30; sun.shadow.camera.right = 30; sun.shadow.camera.top = 30; sun.shadow.camera.bottom = -30; scene.add(sun);
+// 增强阴影设置
+const sun = new THREE.DirectionalLight(0xffffff, 1.8);
+sun.position.set(15, 30, 20);
+sun.castShadow = true;
+sun.shadow.mapSize.width = 2048;
+sun.shadow.mapSize.height = 2048;
+sun.shadow.camera.near = 1;
+sun.shadow.camera.far = 100;
+sun.shadow.camera.left = -40;
+sun.shadow.camera.right = 40;
+sun.shadow.camera.top = 40;
+sun.shadow.camera.bottom = -40;
+sun.shadow.bias = -0.001;
+scene.add(sun);
 
 const neonL1 = new THREE.PointLight(0x00ffff, 3, 80); neonL1.position.set(-15, 15, -10); scene.add(neonL1);
 const neonL2 = new THREE.PointLight(0xff00ff, 3, 80); neonL2.position.set(15, 15, -10); scene.add(neonL2);
@@ -329,6 +484,11 @@ function setLevel(n) {
   ground.material.color.setHex(lv.ground);
   ground.material.emissive.setHex(lv.accent);
   ground.material.emissiveIntensity = 0.25;
+  // 更新霓虹灯光颜色
+  neonL1.color.setHex(lv.accent);
+  neonL2.color.setHex(lv.obstacle || lv.accent);
+  // 更新地面边缘颜色
+  edgeMat.color.setHex(lv.accent);
   document.getElementById('levelDisplay').textContent = gameMode === 'endless' ? '⚡ 极限模式' : lv.name;
 }
 
@@ -362,6 +522,8 @@ function spawnObstacles() {
 
 function startGame() {
   playClickSound();
+  initAudio();
+  startBGM();
   score = 0; coins = 0; distance = 0; levelScore = 0; lastLevelScore = 0;
   distanceSinceLastSpawn = 0; lastSpawnZ = -80;
   playerLane = Math.floor(LANE_COUNT[difficulty] / 2);
@@ -385,19 +547,32 @@ function startGame() {
   
   document.getElementById('startScreen').classList.add('hidden');
   document.getElementById('gameUI').classList.add('show');
+  document.getElementById('pauseBtn').classList.add('show');
+  document.getElementById('leftBtn').classList.add('show');
+  document.getElementById('rightBtn').classList.add('show');
   gameRunning = true;
 }
 
 function gameOver() {
   gameRunning = false;
+  stopBGM();
   if(frameId) { cancelAnimationFrame(frameId); frameId = null; }
   playHitSound();
   document.getElementById('gameUI').classList.remove('show');
+  document.getElementById('pauseBtn').classList.remove('show');
+  document.getElementById('leftBtn').classList.remove('show');
+  document.getElementById('rightBtn').classList.remove('show');
   document.getElementById('startScreen').classList.remove('hidden');
-  if(score > highScore) { highScore = score; localStorage.setItem('sl_hs', highScore); }
-  if(gameMode === 'story' && currentLevel > maxLevel) { maxLevel = currentLevel; localStorage.setItem('sl_lv', maxLevel); if(maxLevel >= 7) document.getElementById('modeEndless').classList.remove('locked'); }
-  document.getElementById('highScoreDisplay').textContent = highScore;
-  document.getElementById('levelProgressDisplay').textContent = maxLevel;
+  // 保存最高分
+  if(score > highScore) { highScore = score; saveData(SAVE_KEYS.highScore, highScore); }
+  // 保存各难度最佳分数
+  if(score > difficultyBest[difficulty]) { difficultyBest[difficulty] = score; saveData(SAVE_KEYS.difficultyBest, difficultyBest); }
+  // 保存关卡进度
+  if(gameMode === 'story' && currentLevel > maxLevel) { maxLevel = currentLevel; saveData(SAVE_KEYS.maxLevel, maxLevel); }
+  // 累计金币
+  totalCoins += coins; saveData(SAVE_KEYS.totalCoins, totalCoins);
+  // 更新显示
+  updateStats();
 }
 
 // ========== 碰撞检测系统（基于圆形碰撞体） ==========
@@ -503,9 +678,11 @@ function checkCoinCollection() {
 
 document.addEventListener('keydown', e => {
   if(!gameRunning) return;
+  // ESC 暂停游戏
+  if(e.key === 'Escape') { togglePause(); return; }
   const max = LANE_COUNT[difficulty] - 1;
-  if(e.key === 'ArrowLeft' || e.key === 'a') targetLane = Math.max(0, targetLane - 1);
-  if(e.key === 'ArrowRight' || e.key === 'd') targetLane = Math.min(max, targetLane + 1);
+  if(e.key === 'ArrowLeft' || e.key === 'a') { targetLane = Math.max(0, targetLane - 1); if(!paused) playSlideSound(); }
+  if(e.key === 'ArrowRight' || e.key === 'd') { targetLane = Math.min(max, targetLane + 1); if(!paused) playSlideSound(); }
 });
 
 document.addEventListener('mousemove', e => {
@@ -545,6 +722,9 @@ function animate(timestamp) {
   if (deltaTime < FRAME_TIME) return;
   lastFrameTime = timestamp - (deltaTime % FRAME_TIME);
   
+  // 暂停时只渲染不更新游戏逻辑
+  if(paused) { renderer.render(scene, camera); return; }
+
   if(gameRunning) {
     const speed = GAME_SPEED[difficulty] + (gameMode === 'endless' ? score * 0.00005 : 0);
     
@@ -581,7 +761,7 @@ function animate(timestamp) {
     distanceSinceLastSpawn += speed;
     if(distanceSinceLastSpawn >= getRequiredGap()) { spawnObstacles(); distanceSinceLastSpawn = 0; }
     
-    if(checkCollision()) { gameOver(); return; }
+    if(checkCollision()) { cameraShake = 1; gameOver(); return; }
     checkCoinCollection();
     
     distance += speed;
@@ -589,11 +769,11 @@ function animate(timestamp) {
     levelScore += Math.floor(speed * 2);
     
     if(gameMode === 'story' && levelScore > 500 && lastLevelScore <= 500) {
-      playUpSound();
+      playLevelUpSound();
       if(currentLevel < LEVELS.length - 1) { currentLevel++; setLevel(currentLevel); }
       levelScore = 0;
     } else if(gameMode === 'endless' && levelScore > 200 && lastLevelScore <= 200) {
-      playUpSound();
+      playLevelUpSound();
       setLevel(Math.floor(Math.random() * LEVELS.length));
       levelScore = 0;
     }
@@ -612,7 +792,8 @@ function animate(timestamp) {
     }
     particleSystem.geometry.attributes.position.needsUpdate = true;
   }
-  
+
+  updateCameraShake();
   renderer.render(scene, camera);
 }
 
@@ -622,9 +803,7 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-document.getElementById('highScoreDisplay').textContent = highScore;
-document.getElementById('levelProgressDisplay').textContent = maxLevel;
-if(maxLevel >= 7) document.getElementById('modeEndless').classList.remove('locked');
+updateStats();
 setLevel(0);
 initAudio();
 animate();

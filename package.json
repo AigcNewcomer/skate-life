@@ -1,0 +1,29 @@
+{
+  "name": "skate-life",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "🛹 一个热带风格的 HTML5 3D 滑板闯关游戏",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"**/*.{js,html,json,css,md}\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AigcNewcomer/skate-life.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AigcNewcomer/skate-life/issues"
+  },
+  "homepage": "https://github.com/AigcNewcomer/skate-life#readme",
+  "devDependencies": {
+    "eslint": "^10.1.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.1"
+  }
+}

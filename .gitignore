@@ -26,3 +26,6 @@ dist-ssr
 # 截图
 screenshots/
 *.png
+
+# Cloudflare Wrangler 缓存
+.wrangler/
